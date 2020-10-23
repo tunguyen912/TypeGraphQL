@@ -1,10 +1,10 @@
-import { Arg, Field, Mutation, ObjectType, Query, Resolver, InputType, Ctx } from "type-graphql";
+import { Arg, Field, Mutation, ObjectType, Resolver, InputType, Ctx } from "type-graphql";
 // import { User } from '../../model/user/userModel'
 import { logInController } from '../../controllers/user/userControllers'
-import { IContext } from "../../types/IContext";
+import { Context } from "../../model/types/Context";
 
 @InputType()
-class loginData {
+export class loginData {
     @Field()
     email: string;
 
@@ -27,18 +27,11 @@ class LoginResponse{
 // @Resolver(User)
 @Resolver()
 export class LoginResolver {
-    @Query(() => String)
-    hello() {
-        return 'Hello World'
-    }
     @Mutation(() => LoginResponse)
     async logIn (
-        // @Arg('email') email: String,
-        // @Arg('password') password: String,
         @Arg('data') loginData: loginData,    
-        @Ctx() context: IContext
+        @Ctx() context: Context
     ): Promise<LoginResponse>{
         return await logInController(loginData, context)
-        // return await logInController({email, password}, context);
     }
 }

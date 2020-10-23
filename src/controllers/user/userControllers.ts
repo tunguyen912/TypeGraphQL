@@ -1,9 +1,14 @@
 import { UserModel } from '../../model/user/userModel';
 import { hashPasswordAsync, comparePasswordAsync, genJWT, logInResponse, defaultResponse } from '../../utils/utils'
-import { SIGN_UP_ERROR, DUPLICATE_ERROR, INCORRECT_PASSWORD, LOG_IN_SUCCESS, INCORRECT_EMAIL } from '../../utils/constants/userConstants'
-import { IContext } from "../../types/IContext"; 
+import { SIGN_UP_ERROR, DUPLICATE_ERROR, INCORRECT_EMAIL_OR_PASSWORD, LOG_IN_SUCCESS, INVALID_EMAIL_TYPE, REGISTER_SUCCESS, LOG_OUT_SUCCESS, AUTHEN_ERROR } from '../../utils/constants/userConstants'
+import { Context } from "../../model/types/Context"; 
+import { ISession } from '../../model/types/ISession.model';
+import { IPayload } from '../../model/types/IPayload.model'
+import { registerData } from '../../schema/user/registerSchema';
+import { loginData } from '../../schema/user/loginSchema';
+import { IDefaultResponse, ILoginResponse } from '../../model/types/IResponse.model';
 
-export async function registerController(registerData) {
+export async function registerController(registerData: registerData): Promise<IDefaultResponse> {
     const { firstName, lastName, email, password } = registerData
     try {
         const hashedPassword = await hashPasswordAsync(password);
@@ -14,33 +19,43 @@ export async function registerController(registerData) {
             password: hashedPassword
         })
         const result = await userInfo.save();
-        if (result) return { isSuccess: true };
+        if (result) return defaultResponse(true, REGISTER_SUCCESS);
         return defaultResponse(false, SIGN_UP_ERROR);
     } catch (error) {
         if (error.code === 11000) return defaultResponse(false, DUPLICATE_ERROR);
+        if (error._message === 'User validation failed') return defaultResponse(false, INVALID_EMAIL_TYPE);
         return defaultResponse(false, SIGN_UP_ERROR);
     }
 }
 
-export async function logInController(logInData, {req}: IContext) {
+export async function logInController(logInData: loginData, context: Context): Promise<ILoginResponse> {
     const { email, password } = logInData;
     const result = await UserModel.findOne({ email });
     if(result){
         const verifyPasswordStatus = await comparePasswordAsync(password, result.password);
-        if(!verifyPasswordStatus) return logInResponse(false, INCORRECT_PASSWORD)
+        if(!verifyPasswordStatus) return logInResponse(false, INCORRECT_EMAIL_OR_PASSWORD)
         else { 
-            const payload = { 
+            const sess = context.req.session as ISession;
+            const payload: IPayload = {
                 userID: result._id,
                 email: result.email,
                 firstName: result.firstName,
                 lastName: result.lastName
-            }
-            console.log(req)
-            //@ts-ignore
-            // req.session.user = payload
+            };
+            sess.user = payload;
             const jwt = genJWT(payload, process.env.JWT_SECRET_KEY, '1h');
             return logInResponse(true, LOG_IN_SUCCESS, jwt)
         }
     }
-    else return logInResponse(false, INCORRECT_EMAIL);
+    else return logInResponse(false, INCORRECT_EMAIL_OR_PASSWORD);
+}
+
+export async function logOutController(context: Context): Promise<IDefaultResponse> {
+    if(!context.req.session.user){
+        return defaultResponse(false, AUTHEN_ERROR)
+    }
+    await context.req.session.destroy((error) => {
+        return defaultResponse(false, error)
+    });
+    return defaultResponse(true, LOG_OUT_SUCCESS)
 }

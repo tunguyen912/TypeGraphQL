@@ -1,8 +1,9 @@
-import { Arg, Field, Mutation, ObjectType, Query, Resolver, InputType } from "type-graphql";
+import { Arg, Field, Mutation, ObjectType, Query, Resolver, InputType, UseMiddleware } from "type-graphql";
 import { registerController } from '../../controllers/user/userControllers'
+import {isAuthenticated} from '../../middlewares/isAuthenticatedMiddleware'
 
 @InputType()
-class registerData {
+export class registerData {
     @Field()
     firstName: string;
 
@@ -27,6 +28,7 @@ class RegisterResponse{
 
 @Resolver()
 export class RegisterResolver {
+    @UseMiddleware(isAuthenticated)
     @Query(() => String)
     hello() {
         return 'Hello World'
