@@ -2,16 +2,16 @@ import { prop, getModelForClass } from '@typegoose/typegoose';
 
 class User {
   @prop({ required: true })
-  firstName?: string;
+  firstName: string;
 
   @prop({ required: true })
-  lastName?: string;
+  lastName: string;
 
   @prop({ required: true, unique: true, validate: /\S+@\S+\.\S+/ })
-  email?: string;
+  email: string;
   
   @prop({ required: true})
-  password?: string;
+  password: string;
 }
 const UserModel = getModelForClass(User);
 

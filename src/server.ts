@@ -7,13 +7,11 @@ import { LogoutResolver } from "./schema/user/logoutSchema";
 
 import { buildSchema } from "type-graphql";
 import app from './app';
-import dbConnection from './config/mongoConfig';
-import { Context } from './model/types/Context'
-import { messageResolver } from "./schema/message/createMessage";
-import { createServer } from 'http'
 
-require('dotenv').config()
-dbConnection(process.env.DB_CONNECTION)
+import { Context } from './model/types/Context';
+import { messageResolver } from "./schema/message/createMessage";
+import { createServer } from 'http';
+
 
 const httpServer = createServer(app)
 const pubSub = new PubSub()
@@ -29,8 +27,7 @@ const main = async () => {
         const context = new Context();
         context.req = req;
         return context
-      }
-      
+      }  
      });
   
     apolloServer.installSubscriptionHandlers(httpServer)

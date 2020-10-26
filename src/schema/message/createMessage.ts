@@ -1,5 +1,7 @@
-import { Arg, Ctx, Field, InputType, Mutation, ObjectType, PubSub, PubSubEngine, Resolver, Root, Subscription } from "type-graphql";
-import { createMessageController } from "../../controllers/message/messageController";
+import { Arg, Ctx, Field, InputType, Mutation, ObjectType, PubSub, PubSubEngine, Query, Resolver, Root, Subscription, UseMiddleware } from "type-graphql";
+import { createMessageController, getMessageController } from "../../controllers/message/messageController";
+import { authorizationMiddleware } from "../../middlewares/authorizationMiddleware";
+import { isAuthenticated } from "../../middlewares/isAuthenticatedMiddleware";
 import { Context } from "../../model/types/Context";
 import { IMessagePayload } from "../../model/types/IMessagePayload.model";
 import { NEW_MESSAGE_TOPIC } from "../../utils/constants/messageConstants";
@@ -26,17 +28,27 @@ class MessageResponse{
 @ObjectType()
 class Message {
     @Field()
-    from: string
+    messageFrom: string
 
     @Field()
-    to: string
+    messageTo: string
 
     @Field()
-    content: string
+    messageContent: string
 }
 
 @Resolver()
 export class messageResolver{
+    @UseMiddleware(isAuthenticated)
+    @UseMiddleware(authorizationMiddleware)
+    @Query(() => [Message])
+    async getMessageHistory(
+        @Ctx() context: Context
+    ): Promise<Message[]> {
+        const result = await getMessageController(context);
+        return result as unknown as Array<Message>;
+    }
+    @UseMiddleware(isAuthenticated)
     @Mutation(() => MessageResponse)
     async sendMessage(
         @Arg('data') messageData: messageData,
@@ -62,10 +74,15 @@ export class messageResolver{
         @Root() {messageFrom, messageTo, messageContent}: IMessagePayload,
         @Arg('toUser') toUser: string
     ): Message{
+        // return {
+        //     from: messageFrom, 
+        //     to: messageTo, 
+        //     content: messageContent
+        // }
         return {
-            from: messageFrom, 
-            to: messageTo, 
-            content: messageContent
+            messageFrom,
+            messageTo,
+            messageContent
         }
     }
 }
