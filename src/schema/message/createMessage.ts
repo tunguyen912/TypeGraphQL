@@ -1,5 +1,6 @@
 import { Arg, Ctx, Field, InputType, Mutation, ObjectType, PubSub, PubSubEngine, Query, Resolver, Root, Subscription, UseMiddleware } from "type-graphql";
 import { createMessageController, getMessageController } from "../../controllers/message/messageController";
+import { findUserController } from "../../controllers/user/userControllers"
 import { authorizationMiddleware } from "../../middlewares/authorizationMiddleware";
 import { isAuthenticated } from "../../middlewares/isAuthenticatedMiddleware";
 import { Context } from "../../model/types/Context";
@@ -26,12 +27,21 @@ class MessageResponse{
 }
 
 @ObjectType()
+export class User{
+    @Field({ nullable: true })
+    _id?: string
+
+    @Field({ nullable: true })
+    email?: string;
+}
+
+@ObjectType()
 class Message {
     @Field()
-    messageFrom: string
+    messageFrom: User
 
     @Field()
-    messageTo: string
+    messageTo: User
 
     @Field()
     messageContent: string
@@ -56,8 +66,8 @@ export class messageResolver{
         @PubSub() pubSub: PubSubEngine
     ): Promise<MessageResponse> {
         const payload: IMessagePayload = {
-            messageFrom: context.req.session.user.email,
-            messageTo: messageData.toUser,
+            messageFrom: await findUserController(context.req.session.user.email),
+            messageTo: await findUserController(messageData.toUser),
             messageContent: messageData.messageContent
         }
         pubSub.publish(NEW_MESSAGE_TOPIC, payload)
@@ -66,23 +76,13 @@ export class messageResolver{
     @Subscription(() => Message, {
         topics: NEW_MESSAGE_TOPIC,
         filter: ({payload, args}) => {
-            console.log(args)
-            return payload.messageTo === args.toUser
+            return payload.messageTo.email === args.toUser
         }
     })
     createMessage(
-        @Root() {messageFrom, messageTo, messageContent}: IMessagePayload,
+        @Root() payload: IMessagePayload,
         @Arg('toUser') toUser: string
     ): Message{
-        // return {
-        //     from: messageFrom, 
-        //     to: messageTo, 
-        //     content: messageContent
-        // }
-        return {
-            messageFrom,
-            messageTo,
-            messageContent
-        }
+        return payload;
     }
 }

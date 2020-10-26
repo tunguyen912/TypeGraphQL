@@ -1,17 +1,12 @@
 import { prop, getModelForClass, Ref } from '@typegoose/typegoose';
 import { User } from '../user/userModel';
 
-class Message {
-  // @prop({ required: true, ref: 'User' })
-  // messageFrom: Ref<User>;
+export class Message {
+  @prop({ required: true, ref: 'User' })
+  messageFrom: Ref<User>;
 
-  // @prop({ required: true, ref: 'User' })
-  // messageTo: Ref<User>;
-  @prop({ required: true })
-  messageFrom: string; 
-
-  @prop({ required: true })
-  messageTo: string;
+  @prop({ required: true, ref: 'User' })
+  messageTo: Ref<User>;
 
   @prop({ required: true })
   messageContent: string;
@@ -19,6 +14,4 @@ class Message {
   @prop({ default: Date.now()})
   time: Date;
 }
-const MessageModel = getModelForClass(Message);
-
-export {Message, MessageModel}
+export const MessageModel = getModelForClass(Message);

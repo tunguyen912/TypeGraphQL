@@ -1,4 +1,4 @@
-import { UserModel } from '../../model/user/userModel';
+import { User, UserModel } from '../../model/user/userModel';
 import { hashPasswordAsync, comparePasswordAsync, genJWT, logInResponse, defaultResponse } from '../../utils/utils'
 import { SIGN_UP_ERROR, DUPLICATE_ERROR, INCORRECT_EMAIL_OR_PASSWORD, LOG_IN_SUCCESS, INVALID_EMAIL_TYPE, REGISTER_SUCCESS, LOG_OUT_SUCCESS, AUTHEN_ERROR } from '../../utils/constants/userConstants'
 import { Context } from "../../model/types/Context"; 
@@ -58,4 +58,8 @@ export async function logOutController(context: Context): Promise<IDefaultRespon
         return defaultResponse(false, error)
     });
     return defaultResponse(true, LOG_OUT_SUCCESS)
+}
+
+export async function findUserController(email: string): Promise<User> {
+    return await UserModel.findOne({ email },{ email })
 }

@@ -1,5 +1,7 @@
+import { User } from "../user/userModel";
+
 export interface IMessagePayload {
-    messageFrom: string,
-    messageTo: string,
+    messageFrom: User,
+    messageTo: User,
     messageContent: string
 }

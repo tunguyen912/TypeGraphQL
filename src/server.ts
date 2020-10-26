@@ -11,13 +11,15 @@ import app from './app';
 import { Context } from './model/types/Context';
 import { messageResolver } from "./schema/message/createMessage";
 import { createServer } from 'http';
+import { PostResolver } from "./schema/post/createPost";
+import { likeResolver } from "./schema/post/likePost";
 
 
 const httpServer = createServer(app)
 const pubSub = new PubSub()
 const main = async () => {
     const schema = await buildSchema({
-      resolvers: [RegisterResolver, LoginResolver, LogoutResolver, messageResolver],
+      resolvers: [RegisterResolver, LoginResolver, LogoutResolver, messageResolver, PostResolver, likeResolver],
       pubSub
     });
   
