@@ -1,33 +1,22 @@
 import "reflect-metadata";
-import { ApolloServer, PubSub } from 'apollo-server-express';
+import { ApolloServer } from 'apollo-server-express';
+import { schema } from './schema/schema'
 
-import { RegisterResolver } from './schema/user/registerSchema';
-import { LoginResolver } from './schema/user/loginSchema';
-import { LogoutResolver } from "./schema/user/logoutSchema";
-
-import { buildSchema } from "type-graphql";
 import app from './app';
 
 import { Context } from './model/types/Context';
-import { messageResolver } from "./schema/message/createMessage";
 import { createServer } from 'http';
-import { PostResolver } from "./schema/post/createPost";
-import { likeResolver } from "./schema/post/likePost";
 
 
 const httpServer = createServer(app)
-const pubSub = new PubSub()
 const main = async () => {
-    const schema = await buildSchema({
-      resolvers: [RegisterResolver, LoginResolver, LogoutResolver, messageResolver, PostResolver, likeResolver],
-      pubSub
-    });
   
     const apolloServer = new ApolloServer({ 
       schema,
-      context: ({ req }) => {
+      context: ({ req, res }) => {
         const context = new Context();
         context.req = req;
+        context.res = res;
         return context
       }  
      });

@@ -1,6 +1,14 @@
-import { Arg, Field, Mutation, ObjectType, Query, Resolver, InputType, UseMiddleware } from "type-graphql";
+import { Arg, Field, InputType, Mutation, ObjectType, Resolver } from "type-graphql";
 import { registerController } from '../../controllers/user/userControllers'
-import {isAuthenticated} from '../../middlewares/isAuthenticatedMiddleware'
+
+@ObjectType()
+class RegisterResponse{
+    @Field()
+    isSuccess: boolean;
+
+    @Field({nullable: true})
+    message?: string;
+}
 
 @InputType()
 export class registerData {
@@ -17,25 +25,11 @@ export class registerData {
     password: string;
 }
 
-@ObjectType()
-class RegisterResponse{
-    @Field()
-    isSuccess: boolean;
-
-    @Field({nullable: true})
-    message?: string;
-}
-
 @Resolver()
 export class RegisterResolver {
-    @UseMiddleware(isAuthenticated)
-    @Query(() => String)
-    hello() {
-        return 'Hello World'
-    }
     @Mutation(() => RegisterResponse)
     async register (
-        @Arg('data') registerData: registerData
+        @Arg("data") registerData: registerData,
     ): Promise<RegisterResponse>{
        return await registerController(registerData)
     }

@@ -2,12 +2,11 @@ import { Message, MessageModel } from '../../model/message/messageModel';
 import { defaultResponse } from '../../utils/utils';
 import { SEND_MESSAGE_SUCCESS } from '../../utils/constants/messageConstants'
 import { ERROR } from '../../utils/constants/messageConstants';
-import { Context } from '../../model/types/Context';
-import { messageData } from '../../schema/message/createMessage';   
+import { Context } from '../../model/types/Context';  
 import { IDefaultResponse } from '../../model/types/IResponse.model';
-import { AUTHEN_ERROR } from '../../utils/constants/userConstants';
 import { ISession } from '../../model/types/ISession.model';
 import { UserModel } from '../../model/user/userModel';
+import { messageData } from '../../schema//message/createMessage';
 
 export async function createMessageController(messageData: messageData, context: Context): Promise<IDefaultResponse> {
     const { toUser, messageContent } = messageData;
@@ -26,6 +25,5 @@ export async function getMessageController(context: Context): Promise<Message> {
     const sess: ISession = context.req.session
     const user = await UserModel.findOne({ email: sess.user.email })
     const result = await MessageModel.find({ messageFrom: user })
-
     return result
 }

@@ -7,3 +7,5 @@ export const REGISTER_SUCCESS = 'Successfully register'
 export const LOG_OUT_SUCCESS = 'Successfully log out'
 export const INVALID_EMAIL_TYPE = 'Invalid email type';
 export const AUTHEN_ERROR = 'Please Log In first !!!'
+export const ALREADY_LOG_IN = 'Please Log Out first !!!'
+

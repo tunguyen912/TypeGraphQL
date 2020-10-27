@@ -1,7 +1,16 @@
-import { Arg, Field, Mutation, ObjectType, Resolver, InputType, Ctx } from "type-graphql";
-// import { User } from '../../model/user/userModel'
-import { logInController } from '../../controllers/user/userControllers'
+import { Arg, Field, Mutation, ObjectType, Resolver, InputType, Ctx, Query, UseMiddleware } from "type-graphql";
+import { findMeController, logInController } from '../../controllers/user/userControllers'
+import { isAuthenticated } from "../../middlewares/isAuthenticatedMiddleware";
 import { Context } from "../../model/types/Context";
+
+@ObjectType()
+export class User{
+    @Field({ nullable: true })
+    _id?: string
+
+    @Field({ nullable: true })
+    email?: string;
+}
 
 @InputType()
 export class loginData {
@@ -13,25 +22,32 @@ export class loginData {
 }
 
 @ObjectType()
-class LoginResponse{
+class LoginResponse {
     @Field()
     isSuccess: boolean;
 
-    @Field({nullable: true})
+    @Field({ nullable: true })
     message?: string;
 
-    @Field({nullable: true})
+    @Field({ nullable: true })
     jwt?: string;
 }
 
-// @Resolver(User)
 @Resolver()
 export class LoginResolver {
-    @Mutation(() => LoginResponse)
-    async logIn (
-        @Arg('data') loginData: loginData,    
+    @UseMiddleware(isAuthenticated)
+    @Query(() => User)
+    async me(
         @Ctx() context: Context
-    ): Promise<LoginResponse>{
+    ): Promise<User> {
+        return await findMeController(context);
+    }
+
+    @Mutation(() => LoginResponse)
+    async logIn(
+        @Arg('data') loginData: loginData,
+        @Ctx() context: Context
+    ): Promise<LoginResponse> {
         return await logInController(loginData, context)
     }
 }

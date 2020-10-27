@@ -6,7 +6,7 @@ import { isAuthenticated } from "../../middlewares/isAuthenticatedMiddleware";
 import { Context } from "../../model/types/Context";
 import { IMessagePayload } from "../../model/types/IMessagePayload.model";
 import { NEW_MESSAGE_TOPIC } from "../../utils/constants/messageConstants";
-
+import { User } from "../user/loginSchema";
 
 @InputType()
 export class messageData{
@@ -24,15 +24,6 @@ class MessageResponse{
 
     @Field({nullable: true})
     message?: string;
-}
-
-@ObjectType()
-export class User{
-    @Field({ nullable: true })
-    _id?: string
-
-    @Field({ nullable: true })
-    email?: string;
 }
 
 @ObjectType()

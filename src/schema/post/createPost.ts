@@ -18,6 +18,7 @@ class PostResponse{
     message?: string;
 }
 
+
 @Resolver()
 export class PostResolver{
     @UseMiddleware(isAuthenticated)
