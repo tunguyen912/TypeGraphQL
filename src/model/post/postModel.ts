@@ -1,4 +1,5 @@
 import { getModelForClass, prop, Ref } from "@typegoose/typegoose";
+import { Comment } from "../comment/commentModel";
 import { User } from "../user/userModel";
 
 export class Post {
@@ -13,5 +14,14 @@ export class Post {
 
     @prop({ ref: 'User', default: [] })
     listOfLike: Ref<User>[]
+
+    @prop({ default: 0 })
+    comments: number
+
+    @prop({ ref: 'Comment', default: [] })
+    listOfComment: Ref<Comment>[]
+
+    @prop({ default: Date.now })
+    time: Date
 }
 export const PostModel = getModelForClass(Post);

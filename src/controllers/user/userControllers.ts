@@ -9,9 +9,6 @@ import { mongo } from 'mongoose';
 import { registerData } from '../../schema/user/registerSchema';
 import { loginData } from '../../schema/user/loginSchema';
 
-
-
-
 export async function registerController(registerData: registerData): Promise<IDefaultResponse> {
     const { firstName, lastName, email, password } = registerData
     try {

@@ -4,7 +4,7 @@ import { findUserByIdController, findUserController } from "../../controllers/us
 import { authorizationMiddleware } from "../../middlewares/authorizationMiddleware";
 import { isAuthenticated } from "../../middlewares/isAuthenticatedMiddleware";
 import { Context } from "../../model/types/Context";
-import { IPostPayload } from "../../model/types/IPostPayload.model";
+import { ILikePostPayload } from "../../model/types/IPostPayload.model";
 import { LIKE_POST_TOPIC } from "../../utils/constants/postConstants"
 import { User } from "../user/loginSchema";
 
@@ -51,12 +51,12 @@ export class likeResolver{
         @Ctx() context: Context,
         @PubSub() pubSub: PubSubEngine
     ): Promise<LikeResponse> {
-        const { result, isLike, response } = await likePostController(postID, context)
-        const owner = await findUserByIdController(result.userID)
-        //result.likes chua update
-        const payload: IPostPayload = {
-            owner: owner,
-            userLike: await findUserController(context.req.session.user.email),
+        const { result, isLike, response } = await likePostController(postID, context);
+        const owner = await findUserByIdController(result.userID);
+        const userLike = await findUserController(context.req.session.user.email);
+        const payload: ILikePostPayload = {
+            owner,
+            userLike,
             content: result.content,
             likes: result.likes
         }
@@ -75,6 +75,4 @@ export class likeResolver{
     ): LikeSubResponse{
         return payload.data;
     }
-
-
 }

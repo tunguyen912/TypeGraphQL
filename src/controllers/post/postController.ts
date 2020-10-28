@@ -35,7 +35,8 @@ export async function likePostController(postID: string, context: Context){
             {
                 $inc: { likes: -1 },
                 $pull: { listOfLike: user._id }
-            }
+            },
+            { new: true }
         );
         isLike = false;
     }else{
@@ -44,11 +45,11 @@ export async function likePostController(postID: string, context: Context){
             {
                 $inc: { likes: 1 },
                 $addToSet: { listOfLike: user._id }
-            }
+            },
+            { new: true }
         );
         isLike = true;
     }
-    // result la thong tin chua update
     if(result) return { result, isLike, response: defaultResponse(true, LIKE_POST_SUCCESS) };
     throw new Error(ERROR);
 }

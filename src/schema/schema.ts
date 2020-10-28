@@ -7,9 +7,10 @@ import { LogoutResolver } from "./user/logoutSchema";
 import { PostResolver } from "./post/createPost";
 import { likeResolver } from "./post/likePost";
 import { messageResolver } from "./message/createMessage";
+import { CommentResolver } from "./comment/addComment";
 
 const pubSub = new PubSub()
 export const schema = buildSchemaSync({
-    resolvers: [RegisterResolver, LoginResolver, LogoutResolver, messageResolver, PostResolver, likeResolver],
+    resolvers: [RegisterResolver, LoginResolver, LogoutResolver, messageResolver, PostResolver, likeResolver, CommentResolver],
     pubSub
 });

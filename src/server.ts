@@ -24,9 +24,9 @@ const main = async () => {
     apolloServer.installSubscriptionHandlers(httpServer)
     apolloServer.applyMiddleware({ app, cors: false });
     
-    httpServer.listen(8080, () => {
-      console.log(`Server ready at http://localhost:8080/${apolloServer.graphqlPath}`)
-      console.log(`Subscriptions ready at ws://localhost:8080/${apolloServer.subscriptionsPath}`);
+    httpServer.listen(4000, () => {
+      console.log(`Server ready at http://localhost:4000/${apolloServer.graphqlPath}`)
+      console.log(`Subscriptions ready at ws://localhost:4000/${apolloServer.subscriptionsPath}`);
     });
 };
   

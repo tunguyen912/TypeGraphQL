@@ -1,6 +1,6 @@
 import { User } from "../user/userModel";
 
-export interface IPostPayload {
+export interface ILikePostPayload {
     userLike: User;
     owner: User;
     content: string;
