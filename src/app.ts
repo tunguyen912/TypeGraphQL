@@ -1,4 +1,5 @@
 import * as Express from 'express';
+import * as cors from 'cors';
 import * as ExpressSession from 'express-session';
 import * as mongoConnect from 'connect-mongo';
 import dbConnection from './config/mongoConfig';
@@ -16,18 +17,16 @@ const connectSession = ExpressSession({
   saveUninitialized: true,
   store: new MongoStore({ mongooseConnection: mongoose.connection }),
   cookie: {
-    maxAge: 60*60*1000
+    maxAge: 60*60*1000,
+    secure: false
   }
 })
-// const sessionOptions = {
-//     secret: process.env.SESSION_SECRET_KEY,
-//     cookie: {
-//       maxAge: 60000
-//     },
-//     saveUninitialized: true,
-//     resave: true
-// };
-// app.use(ExpressSession(sessionOptions));
+app.use(cors({
+  origin: 'http://localhost:3000',
+  allowedHeaders:['X-Requested-With','X-HTTP-Method-Override','Content-Type','Accept','Authorization'],
+  credentials:true,
+  methods:['POST','GET']
+}))
 app.use(connectSession);
 
 export default app;

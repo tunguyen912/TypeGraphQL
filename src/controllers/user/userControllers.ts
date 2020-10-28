@@ -49,6 +49,7 @@ export async function logInController(logInData: loginData, context: Context): P
                     firstName: result.firstName,
                     lastName: result.lastName
                 };
+                //////////////////////////
                 sess.user = payload;
                 //////////////////////////
                 const jwt = genJWT(payload, process.env.JWT_SECRET_KEY, '1h');
