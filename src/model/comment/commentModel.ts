@@ -9,6 +9,6 @@ export class Comment {
     content: string
 
     @prop({ default: Date.now })
-    time: Date
+    createdAt: Date
 }
 export const CommentModel = getModelForClass(Comment);

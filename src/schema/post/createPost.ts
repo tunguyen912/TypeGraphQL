@@ -14,7 +14,7 @@ class PostResponse{
     @Field()
     isSuccess: boolean;
 
-    @Field({nullable: true})
+    @Field({ nullable: true })
     message?: string;
 }
 

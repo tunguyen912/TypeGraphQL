@@ -4,7 +4,7 @@ import { SIGN_UP_ERROR, DUPLICATE_ERROR, INCORRECT_EMAIL_OR_PASSWORD, LOG_IN_SUC
          REGISTER_SUCCESS, LOG_OUT_SUCCESS, ACCOUNT_LOGGED_IN, INVALID_USER } from '../../utils/constants/userConstants'
 import { Context } from "../../model/types/Context"; 
 import { ISession } from '../../model/types/ISession.model';
-import { IPayload } from '../../model/types/IPayload.model'
+import { IUserPayload } from '../../model/types/IUserPayload.model'
 import { IDefaultResponse, ILoginResponse } from '../../model/types/IResponse.model';
 import { mongo } from 'mongoose';
 import { registerData } from '../../schema/user/registerSchema';
@@ -18,6 +18,7 @@ export async function registerController(registerData: registerData): Promise<ID
             firstName,
             lastName,
             email,
+            profileName: `${firstName} ${lastName}`,
             password: hashedPassword
         })
         const result = await userInfo.save();
@@ -38,7 +39,7 @@ export async function logInController(logInData: loginData, context: Context): P
         if(!verifyPasswordStatus) return logInResponse(false, INCORRECT_EMAIL_OR_PASSWORD);
         else { 
             const sess = context.req.session as ISession;
-            const payload: IPayload = {
+            const payload: IUserPayload = {
                 userID: result._id,
                 email: result.email,
                 firstName: result.firstName,
@@ -46,7 +47,6 @@ export async function logInController(logInData: loginData, context: Context): P
             };
             sess.user = payload;
             const jwt = genJWT(payload, process.env.JWT_SECRET_KEY, '1h');
-            // const loggedIn = await UserModel.findOneAndUpdate({ email }, { $set: {isLogin: !result.isLogin }}, { new: true });
             await UserModel.findOneAndUpdate({ email }, { $set: {isLogin: !result.isLogin }}, { new: true });
             return logInResponse(true, LOG_IN_SUCCESS, jwt)
         }
@@ -68,7 +68,7 @@ export async function logOutController(context: Context): Promise<IDefaultRespon
 }
 
 export async function findUserController(email: string): Promise<User> {
-    return await UserModel.findOne({ email },{ email });
+    return await UserModel.findOne({ email });
 }
 
 export async function findUserByIdController(userID: string): Promise<User> {

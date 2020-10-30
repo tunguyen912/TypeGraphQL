@@ -5,4 +5,5 @@ export interface ILikePostPayload {
     owner: User;
     content: string;
     likes: number;
+    createdAt: Date;
 }

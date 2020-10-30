@@ -1,5 +1,5 @@
-import  { IPayload } from './IPayload.model'
+import  { IUserPayload } from './IUserPayload.model'
 
 export interface ISession extends Express.Session {
-    user?: IPayload
+    user?: IUserPayload
 }

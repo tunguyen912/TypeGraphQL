@@ -22,6 +22,6 @@ export class Post {
     listOfComment: Ref<Comment>[]
 
     @prop({ default: Date.now })
-    time: Date
+    createdAt: Date
 }
 export const PostModel = getModelForClass(Post);

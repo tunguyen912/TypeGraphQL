@@ -33,6 +33,8 @@ class CommentSubResponse{
     @Field()
     content: string;
 
+    @Field()
+    createdAt: Date
 }
 
 @Resolver()
@@ -48,7 +50,8 @@ export class CommentResolver{
         const owner = await findUserByIdController(updatedPost.userID);
         const payload: ICommentPayload = {
             content: comment.content,
-            user: comment.userID
+            user: comment.userID,
+            createdAt: comment.createdAt
         }
         pubSub.publish(ADD_COMMENT_TOPIC, {data: payload, owner});
         return response

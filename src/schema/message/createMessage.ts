@@ -1,7 +1,5 @@
 import { Arg, Ctx, Field, InputType, Mutation, ObjectType, PubSub, PubSubEngine, Query, Resolver, Root, Subscription, UseMiddleware } from "type-graphql";
-import { createMessageController, getMessageController } from "../../controllers/message/messageController";
-import { findUserController } from "../../controllers/user/userControllers"
-import { authorizationMiddleware } from "../../middlewares/authorizationMiddleware";
+import { createMessageController } from "../../controllers/message/messageController";
 import { isAuthenticated } from "../../middlewares/isAuthenticatedMiddleware";
 import { Context } from "../../model/types/Context";
 import { IMessagePayload } from "../../model/types/IMessagePayload.model";
@@ -27,7 +25,7 @@ class MessageResponse{
 }
 
 @ObjectType()
-class Message {
+export class Message {
     @Field()
     messageFrom: User
 
@@ -36,19 +34,16 @@ class Message {
 
     @Field()
     messageContent: string
+
+    @Field()
+    conversationID: string
+
+    @Field()
+    createdAt: Date
 }
 
 @Resolver()
 export class messageResolver{
-    @UseMiddleware(isAuthenticated)
-    @UseMiddleware(authorizationMiddleware)
-    @Query(() => [Message])
-    async getMessageHistory(
-        @Ctx() context: Context
-    ): Promise<Message[]> {
-        const result = await getMessageController(context);
-        return result as unknown as Array<Message>;
-    }
     @UseMiddleware(isAuthenticated)
     @Mutation(() => MessageResponse)
     async sendMessage(
@@ -56,13 +51,16 @@ export class messageResolver{
         @Ctx() context: Context,
         @PubSub() pubSub: PubSubEngine
     ): Promise<MessageResponse> {
+        const { result, response } =  await createMessageController(messageData, context)
         const payload: IMessagePayload = {
-            messageFrom: await findUserController(context.req.session.user.email),
-            messageTo: await findUserController(messageData.toUser),
-            messageContent: messageData.messageContent
+            messageFrom: result.messageFrom,
+            messageTo: result.messageTo,
+            messageContent: result.messageContent,
+            conversationID: result.conversationID,
+            createdAt: result.createdAt,
         }
         pubSub.publish(NEW_MESSAGE_TOPIC, payload)
-        return await createMessageController(messageData, context)
+        return response;
     }
     @Subscription(() => Message, {
         topics: NEW_MESSAGE_TOPIC,

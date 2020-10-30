@@ -9,7 +9,11 @@ export class User{
     _id?: string
 
     @Field({ nullable: true })
-    email?: string;
+    profileName?: string;
+
+    @Field({ nullable: true })
+    email?: string
+
 }
 
 @InputType()

@@ -11,7 +11,10 @@ export class Message {
   @prop({ required: true })
   messageContent: string;
   
-  @prop({ default: Date.now()})
-  time: Date;
+  @prop({ default: Date.now })
+  createdAt: Date;
+
+  @prop({ required: true })
+  conversationID: string;
 }
 export const MessageModel = getModelForClass(Message);

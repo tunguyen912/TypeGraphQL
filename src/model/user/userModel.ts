@@ -7,6 +7,9 @@ export class User {
   @prop({ required: true })
   lastName: string;
 
+  @prop({ required: true })
+  profileName: string;
+
   @prop({ required: true, unique: true, validate: /\S+@\S+\.\S+/ })
   email: string;
   
