@@ -1,6 +1,7 @@
 import { User, UserModel } from '../../model/user/userModel';
 import { hashPasswordAsync, comparePasswordAsync, genJWT, logInResponse, defaultResponse } from '../../utils/utils'
-import { SIGN_UP_ERROR, DUPLICATE_ERROR, INCORRECT_EMAIL_OR_PASSWORD, LOG_IN_SUCCESS, INVALID_EMAIL_TYPE, REGISTER_SUCCESS, LOG_OUT_SUCCESS, ALREADY_LOG_IN } from '../../utils/constants/userConstants'
+import { SIGN_UP_ERROR, DUPLICATE_ERROR, INCORRECT_EMAIL_OR_PASSWORD, LOG_IN_SUCCESS, INVALID_EMAIL_TYPE, 
+         REGISTER_SUCCESS, LOG_OUT_SUCCESS, ACCOUNT_LOGGED_IN, INVALID_USER } from '../../utils/constants/userConstants'
 import { Context } from "../../model/types/Context"; 
 import { ISession } from '../../model/types/ISession.model';
 import { IPayload } from '../../model/types/IPayload.model'
@@ -30,38 +31,40 @@ export async function registerController(registerData: registerData): Promise<ID
 }
 
 export async function logInController(logInData: loginData, context: Context): Promise<ILoginResponse> {
-    if(context.req.session.user){
-        return logInResponse(false, ALREADY_LOG_IN)
-    } else {
-        const { email, password } = logInData;
-        const result = await UserModel.findOne({ email });
-        if(result){
-            const verifyPasswordStatus = await comparePasswordAsync(password, result.password);
-            if(!verifyPasswordStatus) return logInResponse(false, INCORRECT_EMAIL_OR_PASSWORD)
-            else { 
-                const sess = context.req.session as ISession;
-                const payload: IPayload = {
-                    userID: result._id,
-                    email: result.email,
-                    firstName: result.firstName,
-                    lastName: result.lastName
-                };
-                //////////////////////////
-                sess.user = payload;
-                //////////////////////////
-                const jwt = genJWT(payload, process.env.JWT_SECRET_KEY, '1h');
-                return logInResponse(true, LOG_IN_SUCCESS, jwt)
-            }
+    const { email, password } = logInData;
+    const result = await UserModel.findOne({ email });
+    if(result && !result.isLogin){
+        const verifyPasswordStatus = await comparePasswordAsync(password, result.password);
+        if(!verifyPasswordStatus) return logInResponse(false, INCORRECT_EMAIL_OR_PASSWORD);
+        else { 
+            const sess = context.req.session as ISession;
+            const payload: IPayload = {
+                userID: result._id,
+                email: result.email,
+                firstName: result.firstName,
+                lastName: result.lastName
+            };
+            sess.user = payload;
+            const jwt = genJWT(payload, process.env.JWT_SECRET_KEY, '1h');
+            // const loggedIn = await UserModel.findOneAndUpdate({ email }, { $set: {isLogin: !result.isLogin }}, { new: true });
+            await UserModel.findOneAndUpdate({ email }, { $set: {isLogin: !result.isLogin }}, { new: true });
+            return logInResponse(true, LOG_IN_SUCCESS, jwt)
         }
-        else return logInResponse(false, INCORRECT_EMAIL_OR_PASSWORD);
-    }
+    } else if(result.isLogin) return logInResponse(false, ACCOUNT_LOGGED_IN)
+    else return logInResponse(false, INCORRECT_EMAIL_OR_PASSWORD);
+    
 }
 
 export async function logOutController(context: Context): Promise<IDefaultResponse> {
-    await context.req.session.destroy((error) => {
-        return defaultResponse(false, error)
-    });
-    return defaultResponse(true, LOG_OUT_SUCCESS)
+    const sess: ISession = context.req.session;
+    const user = await UserModel.findOneAndUpdate({ email: sess.user.email }, { $set: {isLogin: false }}, { new: true });
+    if(user){
+        await context.req.session.destroy((error) => {
+            return defaultResponse(false, error)
+        });
+        return defaultResponse(true, LOG_OUT_SUCCESS)
+    }
+    return defaultResponse(false, INVALID_USER)
 }
 
 export async function findUserController(email: string): Promise<User> {

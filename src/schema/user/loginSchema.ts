@@ -1,6 +1,6 @@
 import { Arg, Field, Mutation, ObjectType, Resolver, InputType, Ctx, Query, UseMiddleware } from "type-graphql";
 import { findMeController, logInController } from '../../controllers/user/userControllers'
-import { isAuthenticated } from "../../middlewares/isAuthenticatedMiddleware";
+import { isAuthenticated, isNotAuthenticated } from "../../middlewares/isAuthenticatedMiddleware";
 import { Context } from "../../model/types/Context";
 
 @ObjectType()
@@ -43,6 +43,7 @@ export class LoginResolver {
         return await findMeController(context);
     }
 
+    @UseMiddleware(isNotAuthenticated)
     @Mutation(() => LoginResponse)
     async logIn(
         @Arg('data') loginData: loginData,

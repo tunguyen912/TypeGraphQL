@@ -4,7 +4,6 @@ import * as ExpressSession from 'express-session';
 import * as mongoConnect from 'connect-mongo';
 import dbConnection from './config/mongoConfig';
 import { mongoose } from '@typegoose/typegoose';
-
 require('dotenv').config()
 
 const app = Express();
@@ -18,15 +17,18 @@ const connectSession = ExpressSession({
   store: new MongoStore({ mongooseConnection: mongoose.connection }),
   cookie: {
     maxAge: 60*60*1000,
-    secure: false
+    secure: false,
+    // sameSite: "none"
   }
 })
 app.use(cors({
-  origin: 'http://localhost:3000',
-  allowedHeaders:['X-Requested-With','X-HTTP-Method-Override','Content-Type','Accept','Authorization'],
-  credentials:true,
-  methods:['POST','GET']
-}))
+  origin: ['http://10.1.16.186:3000', 'http://10.1.2.205', 'http://localhost:3000'],
+  allowedHeaders: ['X-Requested-With','X-HTTP-Method-Override','Content-Type','Accept','Authorization'],
+  credentials: true,
+  methods: ['POST','GET'],
+}));
+
 app.use(connectSession);
+
 
 export default app;
