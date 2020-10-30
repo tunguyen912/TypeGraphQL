@@ -26,15 +26,18 @@ class CommentResponse{
 }
 
 @ObjectType()
-class CommentSubResponse{
-    @Field()
-    user: User;
+export class CommentSubResponse{
+    //Tam thoi de no nullable
+    @Field({ nullable: true })
+    user?: User;
+    
+    //Tam thoi de no nullable
+    @Field({ nullable: true })
+    content?: string;
 
-    @Field()
-    content: string;
-
-    @Field()
-    createdAt: Date
+    //Tam thoi de no nullable
+    @Field({ nullable: true })
+    createdAt?: Date
 }
 
 @Resolver()

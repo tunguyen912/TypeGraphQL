@@ -61,3 +61,8 @@ export async function getListOfLikesController(postID: string): Promise<User[]> 
     // loop to return email
     return null;
 }
+
+export async function getAllPostController() {
+    // Populate userID
+    return await PostModel.find({}).populate('userID');
+}

@@ -75,7 +75,7 @@ export class likeResolver{
     })
     likePostSub(
         @Root() payload,
-        @Arg('owner') owner: string
+        @Arg('owner') owner: string,
     ): LikeSubResponse{
         return payload.data;
     }
