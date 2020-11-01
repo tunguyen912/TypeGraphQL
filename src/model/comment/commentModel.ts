@@ -3,7 +3,7 @@ import { User } from "../user/userModel";
 
 export class Comment {
     @prop({ required: true, ref: 'User' })
-    userID: Ref<User>;
+    owner: Ref<User>;
 
     @prop({ required: true })
     content: string

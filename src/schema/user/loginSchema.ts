@@ -2,19 +2,7 @@ import { Arg, Field, Mutation, ObjectType, Resolver, InputType, Ctx, Query, UseM
 import { findMeController, logInController } from '../../controllers/user/userControllers'
 import { isAuthenticated, isNotAuthenticated } from "../../middlewares/isAuthenticatedMiddleware";
 import { Context } from "../../model/types/Context";
-
-@ObjectType()
-export class User{
-    @Field({ nullable: true })
-    _id?: string
-
-    @Field({ nullable: true })
-    profileName?: string;
-
-    @Field({ nullable: true })
-    email?: string
-
-}
+import { User } from "../schema";
 
 @InputType()
 export class loginData {

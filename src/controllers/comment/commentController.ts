@@ -14,7 +14,7 @@ async function createCommentHelper(commentContent: String, context: Context): Pr
 
     const user = await UserModel.findOne({ email: sess.user.email });
     const commentInfo = new CommentModel({
-        userID: user,
+        owner: user,
         content: commentContent
     }) 
     const result = await commentInfo.save();
@@ -42,3 +42,15 @@ export async function addCommentController(commentData: commentData, context: Co
     if(updatedPost && comment) return {comment, updatedPost, response: defaultResponse(true, ADD_COMMENT_SUCCESS)}
     throw new Error(ERROR);
 }
+
+
+// export async function updateCommentController(id: type, content: string) {
+    // Update content, change time to Date.now
+// }
+
+// export async function deleteCommentController(id: string) {
+//     // Delete comment in comments, in list of comment of Post, change time to Date.now
+//     // const _id = mongo.ObjectId(id);
+//     // const result = await CommentModel.pre('remove', {_id})
+//     // console.log(result)
+// }

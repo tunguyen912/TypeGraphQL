@@ -5,7 +5,7 @@ import { isAuthenticated } from "../../middlewares/isAuthenticatedMiddleware";
 import { Context } from "../../model/types/Context";
 import { ICommentPayload } from "../../model/types/ICommentPayload.model";
 import { ADD_COMMENT_TOPIC } from "../../utils/constants/postConstants";
-import { User } from "../user/loginSchema";
+import { CommentSubResponse } from "../schema";
 
 @InputType()
 export class commentData{
@@ -25,23 +25,16 @@ class CommentResponse{
     message?: string;
 }
 
-@ObjectType()
-export class CommentSubResponse{
-    //Tam thoi de no nullable
-    @Field({ nullable: true })
-    user?: User;
-    
-    //Tam thoi de no nullable
-    @Field({ nullable: true })
-    content?: string;
-
-    //Tam thoi de no nullable
-    @Field({ nullable: true })
-    createdAt?: Date
-}
-
 @Resolver()
 export class CommentResolver{
+    // @Mutation(() => String)
+    // async delete(
+    //     @Arg('id') id: string
+    // ) {
+    //     await deleteCommentController(id);
+    //     return 'hello'
+    // }
+
     @UseMiddleware(isAuthenticated)
     @Mutation(() => CommentResponse)
     async addComment(
@@ -50,10 +43,10 @@ export class CommentResolver{
         @PubSub() pubSub: PubSubEngine
     ): Promise<CommentResponse> {
         const { comment, updatedPost, response } =  await addCommentController(commentData, context);
-        const owner = await findUserByIdController(updatedPost.userID);
+        const owner = await findUserByIdController(updatedPost.owner);
         const payload: ICommentPayload = {
             content: comment.content,
-            user: comment.userID,
+            owner: comment.owner,
             createdAt: comment.createdAt
         }
         pubSub.publish(ADD_COMMENT_TOPIC, {data: payload, owner});

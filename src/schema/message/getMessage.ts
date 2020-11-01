@@ -3,7 +3,7 @@ import { getConversationController } from "../../controllers/message/messageCont
 import { authorizationMiddleware } from "../../middlewares/authorizationMiddleware";
 import { isAuthenticated } from "../../middlewares/isAuthenticatedMiddleware";
 import { Context } from "../../model/types/Context";
-import { Message } from "./createMessage";
+import { Message } from "../schema";
 
 @Resolver()
 export class messageQueryResolver{

@@ -14,7 +14,7 @@ export async function createPostController(postData: postData, context: Context)
     const sess: ISession = context.req.session
     const { email } = sess.user;
     const newPost = new PostModel({
-        userID: await UserModel.findOne({ email }),
+        owner: await UserModel.findOne({ email }),
         content: postContent
     })
     let result = await newPost.save();
@@ -56,13 +56,14 @@ export async function likePostController(postID: string, context: Context){
 
 export async function getListOfLikesController(postID: string): Promise<User[]> {
     const _postID = mongo.ObjectId(postID);
-    const post = await PostModel.findOne({ _id: _postID });
+    const post = await PostModel.findOne({ _id: _postID }).populate('listOfLike');
     if(post) return post.listOfLike;
-    // loop to return email
     return null;
 }
 
 export async function getAllPostController() {
-    // Populate userID
-    return await PostModel.find({}).populate('userID');
+    return await PostModel.find({})
+    .populate('owner')
+    .populate('listOfLike')
+    .populate({ path: 'listOfComment', populate: 'owner' });
 }

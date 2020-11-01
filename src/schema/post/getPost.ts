@@ -1,47 +1,36 @@
 import { Field, ObjectType, Query, Resolver } from "type-graphql";
 import { getAllPostController } from "../../controllers/post/postController";
-import { CommentSubResponse } from '../comment/addComment'
-import { User } from "../user/loginSchema";
-import { findUserByIdController } from "../../controllers/user/userControllers"
+import { CommentSubResponse } from '../schema'
+import { User } from "../schema";
 
 @ObjectType()
 class Post{
-    //Tam thoi de no nullable
-    @Field({ nullable: true })
-    owner?: User;
+    @Field(() => User)
+    owner: User;
 
-    //Tam thoi de no nullable
-    @Field({ nullable: true })
-    content?: string;
+    @Field()
+    content: string;
 
-    //Tam thoi de no nullable
-    @Field({ nullable: true })
-    likes?: number;
+    @Field()
+    likes: number;
 
-    //Tam thoi de no nullable
-    @Field(() => [User], { nullable: true })
-    listOfLike?: User[];
+    @Field(() => [User])
+    listOfLike: User[];
 
-    //Tam thoi de no nullable
-    @Field({ nullable: true })
-    createdAt?: Date;
+    @Field()
+    createdAt: Date;
 
-    //Tam thoi de no nullable
-    @Field({ nullable: true })
-    comments?: number; 
+    @Field()
+    comments: number; 
 
-    //Tam thoi de no nullable
-    @Field(() => [CommentSubResponse], { nullable: true })
-    listOfComment?: CommentSubResponse[];
+    @Field(() => [CommentSubResponse])
+    listOfComment: CommentSubResponse[];
 }
 @Resolver()
 export class GetPostResolver{
     @Query(() => [Post])
     async getAllPost(): Promise<Post[]> {
-        let result = await getAllPostController();
-        // result.userID = await findUserByIdController(result.userID)
-        console.log(result)
-        // Phai loop de lay ra du lieu
+        const result = await getAllPostController();
         return result as unknown as Array<Post>;
     }
 }

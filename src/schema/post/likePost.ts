@@ -6,7 +6,7 @@ import { isAuthenticated } from "../../middlewares/isAuthenticatedMiddleware";
 import { Context } from "../../model/types/Context";
 import { ILikePostPayload } from "../../model/types/IPostPayload.model";
 import { LIKE_POST_TOPIC } from "../../utils/constants/postConstants"
-import { User } from "../user/loginSchema";
+import { User } from "../schema";
 
 @ObjectType()
 class LikeResponse{
@@ -19,10 +19,10 @@ class LikeResponse{
 
 @ObjectType()
 class LikeSubResponse{
-    @Field()
+    @Field(() => User)
     userLike: User;
 
-    @Field()
+    @Field(() => User)
     owner: User;
 
     @Field()
@@ -38,7 +38,7 @@ class LikeSubResponse{
 @Resolver()
 export class likeResolver{
     @UseMiddleware(isAuthenticated)
-    @UseMiddleware(authorizationMiddleware)
+    // @UseMiddleware(authorizationMiddleware)
     @Query(() => [User])
     async getListOfLikes(
         @Arg('postID') postID: string,
@@ -58,11 +58,9 @@ export class likeResolver{
         const owner = await findUserByIdController(result.userID);
         const userLike = await findUserController(context.req.session.user.email);
         const payload: ILikePostPayload = {
-            owner,
             userLike,
             content: result.content,
             likes: result.likes,
-            createdAt: result.createdAt
         }
         pubSub.publish(LIKE_POST_TOPIC, { data: payload, isLike });
         return response;
