@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "dependencies": {
+    "@hasezoey/typegoose": "^5.9.2",
     "@typegoose/typegoose": "^7.4.1",
     "apollo-server-express": "^2.18.2",
     "bcrypt": "^5.0.0",
@@ -16,6 +17,7 @@
     "http": "0.0.1-security",
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^5.10.9",
+    "redis": "^3.0.2",
     "reflect-metadata": "^0.1.13",
     "ts-node": "^9.0.0",
     "type-graphql": "^1.1.0",

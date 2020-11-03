@@ -38,7 +38,6 @@ class LikeSubResponse{
 @Resolver()
 export class likeResolver{
     @UseMiddleware(isAuthenticated)
-    // @UseMiddleware(authorizationMiddleware)
     @Query(() => [User])
     async getListOfLikes(
         @Arg('postID') postID: string,

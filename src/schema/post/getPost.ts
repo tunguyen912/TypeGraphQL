@@ -1,10 +1,13 @@
-import { Field, ObjectType, Query, Resolver } from "type-graphql";
-import { getAllPostController } from "../../controllers/post/postController";
-import { CommentSubResponse } from '../schema'
+import { Arg, Field, Mutation, ObjectType, Query, Resolver } from "type-graphql";
+import { getAllPostController, deletePostController } from "../../controllers/post/postController";
+import { CommentDataResponse } from '../schema'
 import { User } from "../schema";
 
 @ObjectType()
 class Post{
+    @Field()
+    _id: string;
+
     @Field(() => User)
     owner: User;
 
@@ -23,8 +26,8 @@ class Post{
     @Field()
     comments: number; 
 
-    @Field(() => [CommentSubResponse])
-    listOfComment: CommentSubResponse[];
+    @Field(() => [CommentDataResponse])
+    listOfComment: CommentDataResponse[];
 }
 @Resolver()
 export class GetPostResolver{

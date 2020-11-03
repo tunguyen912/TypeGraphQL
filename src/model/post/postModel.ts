@@ -18,8 +18,8 @@ export class Post {
     @prop({ default: 0 })
     comments: number
 
-    @prop({ ref: 'Comment', default: [] })
-    listOfComment: Ref<Comment>[]
+    @prop({ ref: 'Comment', default: [], required: true })
+    listOfComment!: Ref<Comment>[]
 
     @prop({ default: Date.now })
     createdAt: Date

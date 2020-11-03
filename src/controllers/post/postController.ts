@@ -1,12 +1,13 @@
-import { PostModel } from "../../model/post/postModel";
+import { Post, PostModel } from "../../model/post/postModel";
 import { Context } from "../../model/types/Context";
 import { IDefaultResponse } from "../../model/types/IResponse.model";
 import { ISession } from "../../model/types/ISession.model";
 import { User, UserModel } from "../../model/user/userModel";
 import { defaultResponse } from "../../utils/utils";
-import { CREATE_POST_SUCCESS, ERROR, LIKE_POST_SUCCESS } from "../../utils/constants/postConstants"
+import { CREATE_POST_SUCCESS, ERROR, LIKE_POST_SUCCESS, DELETE_POST_SUCCESS, DELETE_POST_FAIL } from "../../utils/constants/postConstants"
 import { mongo } from 'mongoose';
 import { postData } from "../../schema/post/createPost";
+import { CommentModel } from "../../model/comment/commentModel";
 
 
 export async function createPostController(postData: postData, context: Context): Promise<IDefaultResponse> {
@@ -18,18 +19,18 @@ export async function createPostController(postData: postData, context: Context)
         content: postContent
     })
     let result = await newPost.save();
-    if(result) return defaultResponse(true, CREATE_POST_SUCCESS);
+    if (result) return defaultResponse(true, CREATE_POST_SUCCESS);
     throw new Error(ERROR);
 }
 
-export async function likePostController(postID: string, context: Context){
+export async function likePostController(postID: string, context: Context) {
     const sess: ISession = context.req.session
     const _postID = mongo.ObjectId(postID)
 
     const post = await PostModel.findOne({ _id: _postID });
     const user = await UserModel.findOne({ email: sess.user.email });
     let result, isLike: boolean;
-    if(post.listOfLike.includes(user._id)){
+    if (post.listOfLike.includes(user._id)) {
         result = await PostModel.findOneAndUpdate(
             { _id: _postID },
             {
@@ -39,7 +40,7 @@ export async function likePostController(postID: string, context: Context){
             { new: true }
         );
         isLike = false;
-    }else{
+    } else {
         result = await PostModel.findOneAndUpdate(
             { _id: _postID },
             {
@@ -50,20 +51,32 @@ export async function likePostController(postID: string, context: Context){
         );
         isLike = true;
     }
-    if(result) return { result, isLike, response: defaultResponse(true, LIKE_POST_SUCCESS) };
+    if (result) return { result, isLike, response: defaultResponse(true, LIKE_POST_SUCCESS) };
     throw new Error(ERROR);
 }
 
 export async function getListOfLikesController(postID: string): Promise<User[]> {
     const _postID = mongo.ObjectId(postID);
     const post = await PostModel.findOne({ _id: _postID }).populate('listOfLike');
-    if(post) return post.listOfLike;
+    if (post) return post.listOfLike;
     return null;
 }
 
 export async function getAllPostController() {
     return await PostModel.find({})
-    .populate('owner')
-    .populate('listOfLike')
-    .populate({ path: 'listOfComment', populate: 'owner' });
+        .populate('owner')
+        .populate('listOfLike')
+        .populate({ path: 'listOfComment', populate: 'owner' });
+}
+
+export async function deletePostController(id: string) {
+    const _id = mongo.ObjectId(id);
+    const postToDelete = await PostModel.findOne({ _id });
+    const deletePost =  await postToDelete.delete();
+    const listOfComment = postToDelete.listOfComment;
+    const deleteComment = await CommentModel.deleteMany({
+        _id: { $in: listOfComment }
+    });
+    if(deleteComment && deletePost) return defaultResponse(true, DELETE_POST_SUCCESS);
+    return defaultResponse(false, DELETE_POST_FAIL);
 }

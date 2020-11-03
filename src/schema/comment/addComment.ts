@@ -5,7 +5,7 @@ import { isAuthenticated } from "../../middlewares/isAuthenticatedMiddleware";
 import { Context } from "../../model/types/Context";
 import { ICommentPayload } from "../../model/types/ICommentPayload.model";
 import { ADD_COMMENT_TOPIC } from "../../utils/constants/postConstants";
-import { CommentSubResponse } from "../schema";
+import { CommentDataResponse } from "../schema";
 
 @InputType()
 export class commentData{
@@ -27,14 +27,6 @@ class CommentResponse{
 
 @Resolver()
 export class CommentResolver{
-    // @Mutation(() => String)
-    // async delete(
-    //     @Arg('id') id: string
-    // ) {
-    //     await deleteCommentController(id);
-    //     return 'hello'
-    // }
-
     @UseMiddleware(isAuthenticated)
     @Mutation(() => CommentResponse)
     async addComment(
@@ -52,7 +44,7 @@ export class CommentResolver{
         pubSub.publish(ADD_COMMENT_TOPIC, {data: payload, owner});
         return response
     }
-    @Subscription(() => CommentSubResponse, {
+    @Subscription(() => CommentDataResponse, {
         topics: ADD_COMMENT_TOPIC,
         filter: ({ payload, args }) => {
             return payload.owner.email === args.owner
@@ -61,7 +53,7 @@ export class CommentResolver{
     commentSub(
         @Root() payload,
         @Arg('owner') owner: string
-    ): CommentSubResponse{
+    ): CommentDataResponse{
         return payload.data;
     }
 }

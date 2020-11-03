@@ -3,6 +3,7 @@ import * as cors from 'cors';
 import * as ExpressSession from 'express-session';
 import * as mongoConnect from 'connect-mongo';
 import dbConnection from './config/mongoConfig';
+import { connectRedis } from './config/redisConfig';
 import { mongoose } from '@typegoose/typegoose';
 require('dotenv').config()
 
@@ -22,13 +23,14 @@ const connectSession = ExpressSession({
   }
 })
 app.use(cors({
-  origin: ['http://10.1.16.186:3000', 'http://10.1.2.205', 'http://localhost:3000'],
+  origin: ['http://10.1.16.186:3000', 'http://10.1.16.188:3000', 'http://localhost:3000', 'http://10.1.16.187:3000'],
   allowedHeaders: ['X-Requested-With','X-HTTP-Method-Override','Content-Type','Accept','Authorization'],
   credentials: true,
   methods: ['POST','GET'],
 }));
 
 app.use(connectSession);
+// connectRedis();
 
 
 export default app;

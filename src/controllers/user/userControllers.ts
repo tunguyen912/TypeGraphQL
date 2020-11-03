@@ -67,6 +67,13 @@ export async function logOutController(context: Context): Promise<IDefaultRespon
     return defaultResponse(false, INVALID_USER)
 }
 
+export async function logOutByEmailController(email: string): Promise<IDefaultResponse> {
+    // const sess: ISession = context.req.session;
+    // const user = await UserModel.findOneAndUpdate({ email: sess.user.email }, { $set: {isLogin: false }}, { new: true });
+    const user = await UserModel.findOneAndUpdate({ email }, { $set: {isLogin: false }}, { new: true });
+    return defaultResponse(true, LOG_OUT_SUCCESS)
+}
+
 export async function findUserController(email: string): Promise<User> {
     return await UserModel.findOne({ email });
 }
