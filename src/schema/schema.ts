@@ -12,7 +12,7 @@ import { messageQueryResolver } from "./message/getMessage";
 import { GetPostResolver } from "./post/getPost";
 import { UpdateCommentResolver } from "./comment/updateComment";
 import { DeleteCommentResolver } from "./comment/deleteComment";
-import { DeletePostResolver } from "./post/deletePost";
+import { ModifyPostResolver } from "./post/ModifyPost";
 
 @ObjectType()
 export class User{
@@ -47,6 +47,9 @@ export class Message {
 @ObjectType()
 export class CommentDataResponse{
     @Field()
+    _id: string;
+
+    @Field()
     owner: User;
     
     @Field()
@@ -58,7 +61,7 @@ export class CommentDataResponse{
 
 const pubSub = new PubSub()
 export const schema = buildSchemaSync({
-    resolvers: [RegisterResolver, LoginResolver, LogoutResolver, messageResolver, PostResolver, DeletePostResolver,
+    resolvers: [RegisterResolver, LoginResolver, LogoutResolver, messageResolver, PostResolver, ModifyPostResolver,
                 likeResolver, CommentResolver, messageQueryResolver, GetPostResolver, UpdateCommentResolver, DeleteCommentResolver],
     pubSub,
     dateScalarMode: 'isoDate',

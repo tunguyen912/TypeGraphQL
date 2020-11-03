@@ -3,8 +3,8 @@ import { Context } from "../../model/types/Context";
 import { IDefaultResponse } from "../../model/types/IResponse.model";
 import { ISession } from "../../model/types/ISession.model";
 import { User, UserModel } from "../../model/user/userModel";
-import { defaultResponse } from "../../utils/utils";
-import { CREATE_POST_SUCCESS, ERROR, LIKE_POST_SUCCESS, DELETE_POST_SUCCESS, DELETE_POST_FAIL } from "../../utils/constants/postConstants"
+import { defaultResponse, updatePostResponse } from "../../utils/utils";
+import { CREATE_POST_SUCCESS, ERROR, LIKE_POST_SUCCESS, DELETE_POST_SUCCESS, DELETE_POST_FAIL, UPDATE_POST_SUCCESS, UPDATE_POST_FAIL } from "../../utils/constants/postConstants"
 import { mongo } from 'mongoose';
 import { postData } from "../../schema/post/createPost";
 import { CommentModel } from "../../model/comment/commentModel";
@@ -69,7 +69,7 @@ export async function getAllPostController() {
         .populate({ path: 'listOfComment', populate: 'owner' });
 }
 
-export async function deletePostController(id: string) {
+export async function deletePostController(id: string): Promise<IDefaultResponse> {
     const _id = mongo.ObjectId(id);
     const postToDelete = await PostModel.findOne({ _id });
     const deletePost =  await postToDelete.delete();
@@ -79,4 +79,18 @@ export async function deletePostController(id: string) {
     });
     if(deleteComment && deletePost) return defaultResponse(true, DELETE_POST_SUCCESS);
     return defaultResponse(false, DELETE_POST_FAIL);
+}
+
+export async function updatePostController(postID: string, newPostContent: string): Promise<IDefaultResponse> {
+    const _postID = mongo.ObjectId(postID);
+    const result = await PostModel.findByIdAndUpdate(
+        _postID, 
+        { 
+            content: newPostContent, 
+            createdAt: Date.now()
+        }, 
+        { new: true }
+    );
+    if(result) return updatePostResponse(true, UPDATE_POST_SUCCESS, result.content, result.createdAt);
+    return updatePostResponse(false, UPDATE_POST_FAIL);
 }

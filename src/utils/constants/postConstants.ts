@@ -8,4 +8,6 @@ export const DELETE_COMMENT_FAIL = 'Cannot delete a post comment';
 export const ADD_COMMENT_TOPIC = 'ADD_COMMENT_TOPIC';
 export const DELETE_POST_SUCCESS = 'Successfully delete a post';
 export const DELETE_POST_FAIL = 'Cannot delete a post';
+export const UPDATE_POST_SUCCESS = 'Successfully update a post';
+export const UPDATE_POST_FAIL = 'Cannot update a post';
 

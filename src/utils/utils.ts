@@ -19,7 +19,14 @@ export const defaultResponse = (isSuccess: boolean, message = null) => {
         message
     }
 }
-
+export const updatePostResponse = (isSuccess: boolean, message = null, newPostContent = null, updatedAt = null) => {
+    return {
+        isSuccess,
+        message,
+        newPostContent,
+        updatedAt,
+    }
+}
 export const logInResponse = (isSuccess: boolean, message = null, jwt = null) => {
     return {
         isSuccess,

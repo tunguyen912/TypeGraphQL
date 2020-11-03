@@ -52,7 +52,6 @@ export async function logInController(logInData: loginData, context: Context): P
         }
     } else if(result.isLogin) return logInResponse(false, ACCOUNT_LOGGED_IN)
     else return logInResponse(false, INCORRECT_EMAIL_OR_PASSWORD);
-    
 }
 
 export async function logOutController(context: Context): Promise<IDefaultResponse> {
@@ -68,8 +67,6 @@ export async function logOutController(context: Context): Promise<IDefaultRespon
 }
 
 export async function logOutByEmailController(email: string): Promise<IDefaultResponse> {
-    // const sess: ISession = context.req.session;
-    // const user = await UserModel.findOneAndUpdate({ email: sess.user.email }, { $set: {isLogin: false }}, { new: true });
     const user = await UserModel.findOneAndUpdate({ email }, { $set: {isLogin: false }}, { new: true });
     return defaultResponse(true, LOG_OUT_SUCCESS)
 }
