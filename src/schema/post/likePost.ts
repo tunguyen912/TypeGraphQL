@@ -54,12 +54,13 @@ export class likeResolver{
         @PubSub() pubSub: PubSubEngine
     ): Promise<LikeResponse> {
         const { result, isLike, response } = await likePostController(postID, context);
-        const owner = await findUserByIdController(result.userID);
+        const owner = await findUserByIdController(result.owner);
         const userLike = await findUserController(context.req.session.user.email);
         const payload: ILikePostPayload = {
             userLike,
             content: result.content,
             likes: result.likes,
+            owner
         }
         pubSub.publish(LIKE_POST_TOPIC, { data: payload, isLike });
         return response;
@@ -68,6 +69,7 @@ export class likeResolver{
         topics: LIKE_POST_TOPIC,
         filter: ({ payload, args }) => {
             return payload.data.owner.email === args.owner && payload.isLike
+            // return payload.data.owner.email === args.owner 
         }
     })
     likePostSub(

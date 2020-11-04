@@ -4,7 +4,8 @@ import { IDefaultResponse } from "../../model/types/IResponse.model";
 import { ISession } from "../../model/types/ISession.model";
 import { User, UserModel } from "../../model/user/userModel";
 import { defaultResponse, updatePostResponse } from "../../utils/utils";
-import { CREATE_POST_SUCCESS, ERROR, LIKE_POST_SUCCESS, DELETE_POST_SUCCESS, DELETE_POST_FAIL, UPDATE_POST_SUCCESS, UPDATE_POST_FAIL } from "../../utils/constants/postConstants"
+import { CREATE_POST_SUCCESS, ERROR, LIKE_POST_SUCCESS,
+         DELETE_POST_SUCCESS, DELETE_POST_FAIL, UPDATE_POST_SUCCESS, UPDATE_POST_FAIL, UNLIKE_POST } from "../../utils/constants/postConstants"
 import { mongo } from 'mongoose';
 import { postData } from "../../schema/post/createPost";
 import { CommentModel } from "../../model/comment/commentModel";
@@ -51,7 +52,10 @@ export async function likePostController(postID: string, context: Context) {
         );
         isLike = true;
     }
-    if (result) return { result, isLike, response: defaultResponse(true, LIKE_POST_SUCCESS) };
+    if (result) {
+        if(isLike) return { result, isLike, response: defaultResponse(true, LIKE_POST_SUCCESS) };
+        return { result, isLike, response: defaultResponse(true, UNLIKE_POST) }
+    }
     throw new Error(ERROR);
 }
 
@@ -68,6 +72,15 @@ export async function getAllPostController() {
         .populate('listOfLike')
         .populate({ path: 'listOfComment', populate: 'owner' });
 }
+
+export async function getPostByIdController(id: string) {
+    const _postId = mongo.ObjectId(id);
+    return await PostModel.findOne({_id: _postId})
+        .populate('owner')
+        .populate('listOfLike')
+        .populate({ path: 'listOfComment', populate: 'owner' });
+}
+
 
 export async function deletePostController(id: string): Promise<IDefaultResponse> {
     const _id = mongo.ObjectId(id);

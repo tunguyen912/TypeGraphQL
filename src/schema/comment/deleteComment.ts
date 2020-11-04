@@ -31,4 +31,5 @@ export class DeleteCommentResolver{
         const response = await deleteCommentController(commentID, postID);
         return response;
     }
+    
 }

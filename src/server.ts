@@ -25,8 +25,8 @@ const main = async () => {
     apolloServer.applyMiddleware({ app, cors: false });
     
     httpServer.listen(4000, () => {
-      console.log(`Server ready at http://localhost:4000/${apolloServer.graphqlPath}`)
-      console.log(`Subscriptions ready at ws://localhost:4000/${apolloServer.subscriptionsPath}`);
+      console.log(`Server ready at http://localhost:4000${apolloServer.graphqlPath}`)
+      console.log(`Subscriptions ready at ws://localhost:4000${apolloServer.subscriptionsPath}`);
     });
 
     // httpServer.listen(8080, "10.1.16.186", () => {

@@ -28,4 +28,5 @@ export class PostResolver{
     ): Promise<PostResponse> {
         return await createPostController(postData, context)
     }
+    //Subscription to update new post
 }

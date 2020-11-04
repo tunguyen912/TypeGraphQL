@@ -1,5 +1,5 @@
 import { Arg, Field, Mutation, ObjectType, Query, Resolver } from "type-graphql";
-import { getAllPostController, deletePostController } from "../../controllers/post/postController";
+import { getAllPostController, getPostByIdController } from "../../controllers/post/postController";
 import { CommentDataResponse } from '../schema'
 import { User } from "../schema";
 
@@ -36,4 +36,9 @@ export class GetPostResolver{
         const result = await getAllPostController();
         return result as unknown as Array<Post>;
     }
-}
+    @Query(() => Post)
+    async getPostById(
+        @Arg('postId') postId: string
+    ): Promise<Post> {
+        return await getPostByIdController(postId);
+    }}

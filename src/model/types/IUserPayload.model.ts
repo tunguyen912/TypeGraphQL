@@ -1,6 +1,7 @@
 export interface IUserPayload {
-    userID: string
+    userID?: string
     email: string,
     firstName: string,
-    lastName: string
+    lastName: string,
+    token?: string
 }
