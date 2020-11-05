@@ -59,6 +59,33 @@ export class CommentDataResponse{
     createdAt: Date
 }
 
+@ObjectType()
+export class Post{
+    @Field()
+    _id: string;
+
+    @Field(() => User)
+    owner: User;
+
+    @Field()
+    content: string;
+
+    @Field()
+    likes: number;
+
+    @Field(() => [User])
+    listOfLike: User[];
+
+    @Field()
+    createdAt: Date;
+
+    @Field()
+    comments: number; 
+
+    @Field(() => [CommentDataResponse])
+    listOfComment: CommentDataResponse[];
+}
+
 const pubSub = new PubSub()
 export const schema = buildSchemaSync({
     resolvers: [RegisterResolver, LoginResolver, LogoutResolver, messageResolver, PostResolver, ModifyPostResolver,

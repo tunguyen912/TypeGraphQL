@@ -1,6 +1,7 @@
 import { Arg, Ctx, Field, InputType, Mutation, ObjectType, PubSubEngine, Resolver, UseMiddleware, PubSub, Subscription, Root } from "type-graphql";
 import { addCommentController } from "../../controllers/comment/commentController";
 import { findUserByIdController } from "../../controllers/user/userControllers";
+import { authorizationMiddleware } from "../../middlewares/authorizationMiddleware";
 import { isAuthenticated } from "../../middlewares/isAuthenticatedMiddleware";
 import { Context } from "../../model/types/Context";
 import { ICommentPayload } from "../../model/types/ICommentPayload.model";
@@ -28,6 +29,7 @@ class CommentResponse{
 @Resolver()
 export class CommentResolver{
     @UseMiddleware(isAuthenticated)
+    @UseMiddleware(authorizationMiddleware)
     @Mutation(() => CommentResponse)
     async addComment(
         @Arg('data') commentData: commentData,

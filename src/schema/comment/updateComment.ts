@@ -5,6 +5,7 @@ import { updateCommentController } from "../../controllers/comment/commentContro
 import { Context } from "../../model/types/Context";
 import { ICommentPayload } from "../../model/types/ICommentPayload.model";
 import { UPDATE_COMMENT_TOPIC } from "../../utils/constants/commentConstants";
+import { authorizationMiddleware } from "../../middlewares/authorizationMiddleware";
 
 @InputType()
 class UpdateCommentData{
@@ -18,6 +19,7 @@ class UpdateCommentData{
 @Resolver()
 export class UpdateCommentResolver{
     @UseMiddleware(isAuthenticated)
+    @UseMiddleware(authorizationMiddleware)
     @Mutation(() => CommentDataResponse)
     async updateComment(
         @Arg('data') updateCommentData: UpdateCommentData,

@@ -1,11 +1,10 @@
 import { User, UserModel } from '../../model/user/userModel';
-import { hashPasswordAsync, comparePasswordAsync, genJWT, logInResponse, defaultResponse } from '../../utils/utils';
+import { hashPasswordAsync, comparePasswordAsync, genJWT, logInResponse, defaultResponse, getUserClientId } from '../../utils/utils';
 import {
     SIGN_UP_ERROR, DUPLICATE_ERROR, INCORRECT_EMAIL_OR_PASSWORD, LOG_IN_SUCCESS, INVALID_EMAIL_TYPE,
     REGISTER_SUCCESS, LOG_OUT_SUCCESS, ACCOUNT_LOGGED_IN, INVALID_USER
 } from '../../utils/constants/userConstants';
 import { Context } from "../../model/types/Context";
-import { ISession } from '../../model/types/ISession.model';
 import { IUserPayload } from '../../model/types/IUserPayload.model';
 import { IDefaultResponse, ILoginResponse } from '../../model/types/IResponse.model';
 import { mongo } from 'mongoose';
@@ -14,8 +13,6 @@ import { loginData } from '../../schema/user/loginSchema';
 
 // Redis
 import redisClient from '../../config/redisConfig';  
-// import { asyncRedisClient } from '../../config/redisConfig'
-import * as redis from 'redis';
 
 export async function registerController(registerData: registerData): Promise<IDefaultResponse> {
     const { firstName, lastName, email, password } = registerData
@@ -46,20 +43,17 @@ export async function logInController(logInData: loginData, context: Context): P
             const verifyPasswordStatus = await comparePasswordAsync(password, result.password);
             if (!verifyPasswordStatus) return logInResponse(false, INCORRECT_EMAIL_OR_PASSWORD);
             else {
-                const sess = context.req.session as ISession;
                 const payload: IUserPayload = {
                     userID: result._id,
                     email: result.email,
                     firstName: result.firstName,
                     lastName: result.lastName,
                 };
-                sess.user = payload;
                 const jwt: string = genJWT(payload, process.env.JWT_SECRET_KEY, process.env.TOKEN_EXPIRE_IN);
-                sess.user.token = jwt;
-                // Using Redis and DiviceId instead of Session
-                const deviceID: string = context.req.headers.deviceid as string;
-                redisClient.hmset(deviceID, 'email', result.email, 'firstName', result.firstName, 'lastName', result.lastName, 'token', jwt);
-                // 
+                const clientDeviceID: string = getUserClientId(context.req);
+                redisClient.hmset(clientDeviceID, 'email', result.email, 'firstName', result.firstName, 'lastName', result.lastName, 'token', jwt);
+                // expires in 2 hours
+                redisClient.expire(clientDeviceID, 2*3600);
                 await UserModel.findOneAndUpdate({ email }, { $set: { isLogin: !result.isLogin }}, { new: true });
                 return logInResponse(true, LOG_IN_SUCCESS, jwt)
             }
@@ -70,15 +64,11 @@ export async function logInController(logInData: loginData, context: Context): P
 }
 
 export async function logOutController(context: Context): Promise<IDefaultResponse> {
-    const sess: ISession = context.req.session;
-    const user = await UserModel.findOneAndUpdate({ email: sess.user.email }, { $set: { isLogin: false } }, { new: true });
+    const clientDeviceID: string = getUserClientId(context.req);
+    const userInfo = await redisClient.hgetall(clientDeviceID) as unknown as IUserPayload;
+    const user = await UserModel.findOneAndUpdate({ email: userInfo.email }, { $set: { isLogin: false } }, { new: true });
     if (user) {
-        context.req.session.destroy((error) => {
-            return defaultResponse(false, error)
-        });
-        // Using Redis and DiviceId instead of Session
-        const deviceID: string = context.req.headers.deviceid as string;
-        redisClient.hdel(deviceID, 'email', 'firstName', 'lastName', 'token');
+        redisClient.hdel(clientDeviceID, 'email', 'firstName', 'lastName', 'token');
         // 
         return defaultResponse(true, LOG_OUT_SUCCESS)
     }
@@ -86,7 +76,7 @@ export async function logOutController(context: Context): Promise<IDefaultRespon
 }
 
 export async function logOutByEmailController(email: string): Promise<IDefaultResponse> {
-    const user = await UserModel.findOneAndUpdate({ email }, { $set: { isLogin: false } }, { new: true });
+    await UserModel.findOneAndUpdate({ email }, { $set: { isLogin: false } }, { new: true });
     return defaultResponse(true, LOG_OUT_SUCCESS)
 }
 
@@ -100,6 +90,7 @@ export async function findUserByIdController(userID: string): Promise<User> {
 }
 
 export async function findMeController(context: Context): Promise<User> {
-    const sess: ISession = context.req.session;
-    return await findUserByIdController(sess.user.userID)
+    const clientDeviceID: string = getUserClientId(context.req);
+    const userInfo = await redisClient.hgetall(clientDeviceID) as unknown as IUserPayload;
+    return await findUserController(userInfo.email);
 }

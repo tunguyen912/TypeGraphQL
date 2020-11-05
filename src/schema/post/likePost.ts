@@ -1,11 +1,14 @@
 import { Arg, Ctx, Field, Mutation, ObjectType, Resolver, PubSub, PubSubEngine, UseMiddleware, Subscription, Root, Query } from "type-graphql";
+import redisClient from "../../config/redisConfig";
 import { getListOfLikesController, likePostController } from "../../controllers/post/postController";
 import { findUserByIdController, findUserController } from "../../controllers/user/userControllers";
 import { authorizationMiddleware } from "../../middlewares/authorizationMiddleware";
 import { isAuthenticated } from "../../middlewares/isAuthenticatedMiddleware";
 import { Context } from "../../model/types/Context";
 import { ILikePostPayload } from "../../model/types/ILikePostPayload.model";
+import { IUserPayload } from "../../model/types/IUserPayload.model";
 import { LIKE_POST_TOPIC } from "../../utils/constants/postConstants"
+import { getUserClientId } from "../../utils/utils";
 import { User } from "../schema";
 
 @ObjectType()
@@ -24,9 +27,6 @@ class LikeSubResponse{
 
     @Field(() => User)
     owner: User;
-
-    // @Field()
-    // content: string;
     
     @Field()
     _id: String;
@@ -50,6 +50,7 @@ export class likeResolver{
     }
 
     @UseMiddleware(isAuthenticated)
+    @UseMiddleware(authorizationMiddleware)
     @Mutation(() => LikeResponse)
     async likePost(
         @Arg('postID') postID: string,
@@ -58,7 +59,9 @@ export class likeResolver{
     ): Promise<LikeResponse> {
         const { result, isLike, response } = await likePostController(postID, context);
         const owner = await findUserByIdController(result.owner);
-        const userLike = await findUserController(context.req.session.user.email);
+        const clientDeviceID: string = getUserClientId(context.req);
+        const userInfo = await redisClient.hgetall(clientDeviceID) as unknown as IUserPayload;
+        const userLike = await findUserController(userInfo.email);
         const payload: ILikePostPayload = {
             userLike,
             _id: result._id,
@@ -72,7 +75,7 @@ export class likeResolver{
         topics: LIKE_POST_TOPIC,
         // filter: ({ payload, args }) => {
         //     return payload.data.owner.email === args.owner && payload.isLike
-            // return payload.data.owner.email === args.owner 
+        //     return payload.data.owner.email === args.owner 
         // }
     })
     likePostSub(

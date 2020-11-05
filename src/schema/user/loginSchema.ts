@@ -35,7 +35,7 @@ export class LoginResolver {
         return await findMeController(context);
     }
 
-    // @UseMiddleware(isNotAuthenticated)
+    @UseMiddleware(isNotAuthenticated)
     @Mutation(() => LoginResponse)
     async logIn(
         @Arg('data') loginData: loginData,

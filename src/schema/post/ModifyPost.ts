@@ -1,5 +1,7 @@
-import { Arg, Field, InputType, Mutation, ObjectType } from "type-graphql";
+import { Arg, Field, InputType, Mutation, ObjectType, UseMiddleware } from "type-graphql";
 import { deletePostController, updatePostController } from "../../controllers/post/postController";
+import { authorizationMiddleware } from "../../middlewares/authorizationMiddleware";
+import { isAuthenticated } from "../../middlewares/isAuthenticatedMiddleware";
 
 @InputType()
 class UpdatePostData{
@@ -35,12 +37,16 @@ class UpdatePostResponse{
 }
 
 export class ModifyPostResolver {
+    @UseMiddleware(isAuthenticated)
+    @UseMiddleware(authorizationMiddleware)
     @Mutation(() => DeletePostResponse)
     async deletePost(
         @Arg('postID') postID: string
     ): Promise<DeletePostResponse> {
        return await deletePostController(postID);
     }
+    @UseMiddleware(isAuthenticated)
+    @UseMiddleware(authorizationMiddleware)
     @Mutation(() => UpdatePostResponse)
     async updatePost(
         @Arg('data') updatePostData: UpdatePostData

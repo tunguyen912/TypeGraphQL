@@ -3,20 +3,22 @@ import { Context } from "../../model/types/Context";
 import { IDefaultResponse } from "../../model/types/IResponse.model";
 import { ISession } from "../../model/types/ISession.model";
 import { User, UserModel } from "../../model/user/userModel";
-import { defaultResponse, updatePostResponse } from "../../utils/utils";
+import { defaultResponse, getUserClientId, updatePostResponse } from "../../utils/utils";
 import { CREATE_POST_SUCCESS, ERROR, LIKE_POST_SUCCESS,
          DELETE_POST_SUCCESS, DELETE_POST_FAIL, UPDATE_POST_SUCCESS, UPDATE_POST_FAIL, UNLIKE_POST } from "../../utils/constants/postConstants"
 import { mongo } from 'mongoose';
 import { postData } from "../../schema/post/createPost";
 import { CommentModel } from "../../model/comment/commentModel";
+import redisClient from "../../config/redisConfig";
+import { IUserPayload } from "../../model/types/IUserPayload.model";
 
 
 export async function createPostController(postData: postData, context: Context) {
     const { postContent } = postData;
-    const sess: ISession = context.req.session
-    const { email } = sess.user;
+    const clientDeviceID: string = getUserClientId(context.req);
+    const userInfo = await redisClient.hgetall(clientDeviceID) as unknown as IUserPayload;
     const newPostInfo = new PostModel({
-        owner: await UserModel.findOne({ email }),
+        owner: await UserModel.findOne({ email: userInfo.email }),
         content: postContent
     })
     const newPost = await newPostInfo.save();
@@ -30,11 +32,11 @@ export async function createPostController(postData: postData, context: Context)
 }
 
 export async function likePostController(postID: string, context: Context) {
-    const sess: ISession = context.req.session
+    const clientDeviceID: string = getUserClientId(context.req);
+    const userInfo = await redisClient.hgetall(clientDeviceID) as unknown as IUserPayload;
     const _postID = mongo.ObjectId(postID)
-
     const post = await PostModel.findOne({ _id: _postID });
-    const user = await UserModel.findOne({ email: sess.user.email });
+    const user = await UserModel.findOne({ email: userInfo.email });
     let result, isLike: boolean;
     if (post.listOfLike.includes(user._id)) {
         result = await PostModel.findOneAndUpdate(

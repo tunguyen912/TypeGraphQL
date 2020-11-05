@@ -1,5 +1,6 @@
 import { Arg, Ctx, Field, InputType, Mutation, ObjectType, PubSub, PubSubEngine, Query, Resolver, Root, Subscription, UseMiddleware } from "type-graphql";
 import { createMessageController } from "../../controllers/message/messageController";
+import { authorizationMiddleware } from "../../middlewares/authorizationMiddleware";
 import { isAuthenticated } from "../../middlewares/isAuthenticatedMiddleware";
 import { Context } from "../../model/types/Context";
 import { IMessagePayload } from "../../model/types/IMessagePayload.model";
@@ -27,6 +28,7 @@ class MessageResponse{
 @Resolver()
 export class messageResolver{
     @UseMiddleware(isAuthenticated)
+    @UseMiddleware(authorizationMiddleware)
     @Mutation(() => MessageResponse)
     async sendMessage(
         @Arg('data') messageData: messageData,

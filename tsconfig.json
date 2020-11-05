@@ -5,6 +5,6 @@
       "lib": ["es2018", "esnext.asynciterable"],
       "experimentalDecorators": true,
       "moduleResolution": "node",
-      "emitDecoratorMetadata": true
+      "emitDecoratorMetadata": true,
     }
   }

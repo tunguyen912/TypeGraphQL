@@ -25,7 +25,7 @@ const connectSession = ExpressSession({
   cookie: {
     maxAge: 60 * 60 * 1000,
     secure: false,
-    // sameSite: "none"
+    sameSite: "none"
   }
 })
 app.use(cors({

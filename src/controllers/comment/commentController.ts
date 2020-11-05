@@ -5,14 +5,17 @@ import { mongo } from 'mongoose';
 import { Post, PostModel } from "../../model/post/postModel";
 import { UserModel } from "../../model/user/userModel";
 import { ERROR } from "../../utils/constants/userConstants";
-import { defaultResponse } from "../../utils/utils";
+import { defaultResponse, getUserClientId } from "../../utils/utils";
 import { Comment, CommentModel } from "../../model/comment/commentModel";
 import { ADD_COMMENT_SUCCESS, DELETE_COMMENT_SUCCESS, DELETE_COMMENT_FAIL } from "../../utils/constants/postConstants";
+import redisClient from "../../config/redisConfig";
+import { IUserPayload } from "../../model/types/IUserPayload.model";
 
 async function createCommentHelper(commentContent: String, context: Context): Promise<Comment> {
-    const sess: ISession = context.req.session;
+    const clientDeviceID: string = getUserClientId(context.req);
+    const userInfo = await redisClient.hgetall(clientDeviceID) as unknown as IUserPayload;
+    const user = await UserModel.findOne({ email: userInfo.email });
 
-    const user = await UserModel.findOne({ email: sess.user.email });
     const commentInfo = new CommentModel({
         owner: user,
         content: commentContent
@@ -73,7 +76,6 @@ export async function deleteCommentController(commentID: string, postID: string)
     ).populate('owner', 'profileName email')
      .populate('listOfLike', 'profileName email')
      .populate({ path: 'listOfComment', select: 'content createdAt', populate: 'owner'})
-    console.log(updatePostComment);
     if(updatePostComment && deleteComment) return { data: updatePostComment, response: defaultResponse(true, DELETE_COMMENT_SUCCESS) };
     return {data: null, response: defaultResponse(false, DELETE_COMMENT_FAIL)};
 }

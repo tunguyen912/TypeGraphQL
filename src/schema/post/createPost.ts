@@ -2,9 +2,10 @@ import { Arg, Ctx, Field, InputType, Mutation, ObjectType, PubSub, PubSubEngine,
 import { createPostController } from "../../controllers/post/postController";
 import { isAuthenticated } from "../../middlewares/isAuthenticatedMiddleware";
 import { Context } from "../../model/types/Context";
-import { Post } from "./getPost";
+import { Post } from "../schema";
 import { CREATE_POST_TOPIC } from "../../utils/constants/postConstants";
 import { IPostPayload } from "../../model/types/IPostPayload.model";
+import { authorizationMiddleware } from "../../middlewares/authorizationMiddleware";
 
 @InputType()
 export class postData{
@@ -24,6 +25,7 @@ class PostResponse{
 @Resolver()
 export class PostResolver{
     @UseMiddleware(isAuthenticated)
+    @UseMiddleware(authorizationMiddleware)
     @Mutation(() => PostResponse)
     async createPost(
         @Arg('data') postData: postData,

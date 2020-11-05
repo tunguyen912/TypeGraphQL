@@ -3,7 +3,8 @@ import { isAuthenticated } from "../../middlewares/isAuthenticatedMiddleware";
 import { deleteCommentController } from "../../controllers/comment/commentController"
 import { IPostPayload } from "../../model/types/IPostPayload.model";
 import { DELETE_COMMENT_TOPIC } from "../../utils/constants/commentConstants";
-import { Post } from "../post/getPost";
+import { Post } from "../schema";
+import { authorizationMiddleware } from "../../middlewares/authorizationMiddleware";
 
 @ObjectType()
 class DeleteCommentResponse{
@@ -26,6 +27,7 @@ class DeleteCommentData{
 @Resolver()
 export class DeleteCommentResolver{
     @UseMiddleware(isAuthenticated)
+    @UseMiddleware(authorizationMiddleware)
     @Mutation(() => DeleteCommentResponse)
     async deleteComment(
         @Arg('data') deleteCommentData: DeleteCommentData,

@@ -1,5 +1,5 @@
 import { Message, MessageModel } from '../../model/message/messageModel';
-import { defaultResponse } from '../../utils/utils';
+import { defaultResponse, getUserClientId } from '../../utils/utils';
 import { SEND_MESSAGE_SUCCESS } from '../../utils/constants/messageConstants'
 import { ERROR } from '../../utils/constants/messageConstants';
 import { Context } from '../../model/types/Context';  
@@ -8,11 +8,13 @@ import { UserModel } from '../../model/user/userModel';
 import { messageData } from '../../schema//message/createMessage';
 import { mongo } from 'mongoose';
 import { IUserPayload } from '../../model/types/IUserPayload.model';
+import redisClient from '../../config/redisConfig';
 
 export async function createMessageController(messageData: messageData, context: Context) {
     const { toUser, messageContent } = messageData;
-    const { email } = context.req.session.user;
-    const from = await UserModel.findOne({ email: email });
+    const clientDeviceID: string = getUserClientId(context.req);
+    const userInfo = await redisClient.hgetall(clientDeviceID) as unknown as IUserPayload;
+    const from = await UserModel.findOne({ email: userInfo.email });
     const to = await UserModel.findOne({ email: toUser });
     const conversationID = await getConversationIdHelper(from._id, to._id);
     const newMessage = new MessageModel({
@@ -37,10 +39,10 @@ async function getConversationIdHelper(fromID: String, toID: String): Promise<St
 }
 
 export async function getConversationController(context: Context, withUser: string) {
-    const sess: ISession = context.req.session;
-    const user1: IUserPayload = sess.user;
+    const clientDeviceID: string = getUserClientId(context.req);
+    const userInfo = await redisClient.hgetall(clientDeviceID) as unknown as IUserPayload;
     const user2 = await UserModel.findOne({email: withUser});
-    const conversationID = await getConversationIdHelper(user1.userID, user2._id);
+    const conversationID = await getConversationIdHelper(userInfo.userID, user2._id);
     return await MessageModel.find({ conversationID });
-    // Cannot get user email
+    //populate user
 }
