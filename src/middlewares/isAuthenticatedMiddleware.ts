@@ -7,7 +7,7 @@ import redisClient from '../config/redisConfig';
 import * as redis from 'redis';
 
 export const isAuthenticated: MiddlewareFn<Context> = async ({ context }, next) => {
-    // if (!context.req.session.user) throw new Error(AUTHEN_ERROR);
+    if (!context.req.session.user) throw new Error(AUTHEN_ERROR);
 
     // Using Redis and DiviceId instead of Session
     const deviceId = context.req.headers.deviceid as string;

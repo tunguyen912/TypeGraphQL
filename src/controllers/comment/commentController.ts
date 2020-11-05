@@ -53,7 +53,7 @@ export async function updateCommentController(id: string, content: string) {
             createdAt: Date.now()
         }, 
         { new: true }
-    ).populate('owner');
+    ).populate('owner', 'profileName email');
     return result;
 }
 
@@ -70,7 +70,10 @@ export async function deleteCommentController(commentID: string, postID: string)
             $inc: { comments: -1 },
         },
         { new: true }
-    );
-    if(updatePostComment && deleteComment) return defaultResponse(true, DELETE_COMMENT_SUCCESS);
-    return defaultResponse(false, DELETE_COMMENT_FAIL);
+    ).populate('owner', 'profileName email')
+     .populate('listOfLike', 'profileName email')
+     .populate({ path: 'listOfComment', select: 'content createdAt', populate: 'owner'})
+    console.log(updatePostComment);
+    if(updatePostComment && deleteComment) return { data: updatePostComment, response: defaultResponse(true, DELETE_COMMENT_SUCCESS) };
+    return {data: null, response: defaultResponse(false, DELETE_COMMENT_FAIL)};
 }

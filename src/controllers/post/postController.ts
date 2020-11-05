@@ -1,4 +1,4 @@
-import { Post, PostModel } from "../../model/post/postModel";
+import { PostModel } from "../../model/post/postModel";
 import { Context } from "../../model/types/Context";
 import { IDefaultResponse } from "../../model/types/IResponse.model";
 import { ISession } from "../../model/types/ISession.model";
@@ -11,16 +11,21 @@ import { postData } from "../../schema/post/createPost";
 import { CommentModel } from "../../model/comment/commentModel";
 
 
-export async function createPostController(postData: postData, context: Context): Promise<IDefaultResponse> {
+export async function createPostController(postData: postData, context: Context) {
     const { postContent } = postData;
     const sess: ISession = context.req.session
     const { email } = sess.user;
-    const newPost = new PostModel({
+    const newPostInfo = new PostModel({
         owner: await UserModel.findOne({ email }),
         content: postContent
     })
-    let result = await newPost.save();
-    if (result) return defaultResponse(true, CREATE_POST_SUCCESS);
+    const newPost = await newPostInfo.save();
+    const _newPostId = mongo.ObjectId(newPost._id);
+    const result = await PostModel.findById(_newPostId)
+    .populate('owner', 'profileName email')
+    .populate('listOfLike', 'profileName email')
+    .populate({ path: 'listOfComment', populate: 'owner' });
+    if (newPost) return {data: result, response: defaultResponse(true, CREATE_POST_SUCCESS)};
     throw new Error(ERROR);
 }
 
@@ -68,19 +73,28 @@ export async function getListOfLikesController(postID: string): Promise<User[]> 
 
 export async function getAllPostController() {
     return await PostModel.find({})
-        .populate('owner')
-        .populate('listOfLike')
+        .populate('owner', 'profileName email')
+        .populate('listOfLike', 'profileName email')
         .populate({ path: 'listOfComment', populate: 'owner' });
 }
 
 export async function getPostByIdController(id: string) {
     const _postId = mongo.ObjectId(id);
     return await PostModel.findOne({_id: _postId})
-        .populate('owner')
-        .populate('listOfLike')
+        .populate('owner', 'profileName email')
+        .populate('listOfLike', 'profileName email')
         .populate({ path: 'listOfComment', populate: 'owner' });
 }
 
+export const getPostByOwnerIdController = async (ownerID: string) => {
+    const _ownerId = mongo.ObjectId(ownerID);
+    const result = await PostModel.find({owner: _ownerId})
+    .populate('owner', 'profileName email')
+    .populate('listOfLike', 'profileName email')
+    .populate({ path: 'listOfComment', populate: 'owner' });
+    if(result) return result;
+    throw new Error(ERROR);
+}
 
 export async function deletePostController(id: string): Promise<IDefaultResponse> {
     const _id = mongo.ObjectId(id);

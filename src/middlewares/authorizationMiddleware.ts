@@ -19,17 +19,17 @@ const generateToken = (payload: IUserPayload): string => {
 export const authorizationMiddleware: MiddlewareFn<Context> = async({ context }, next) => {
     const jwtReq: string = context.req.headers.authorization;
     const token: string = jwtReq.replace("Bearer ", "");
-    // const sess: ISession = context.req.session;
-    // const userInfo: IUserPayload = sess.user;
+    const sess: ISession = context.req.session;
+    const userInfo: IUserPayload = sess.user;
     const deviceId = context.req.headers.deviceid as string;
     // console.log(typeof userInfo2) print object but when I tried to get userInfo2.email, got an error: cannot get email of boolean??????  
     const userInfo2 = await redisClient.hgetall(deviceId) as unknown as IUserPayload;
     
     try {
         const payload: IUserPayload = await jwt.verify(token, process.env.JWT_SECRET_KEY);
-        // if(payload.email !== userInfo.email) {
-        //     throw new Error('Bad token!')
-        // }
+        if(payload.email !== userInfo.email) {
+            throw new Error('Bad token!')
+        }
 
         // Using Redis and DiviceId instead of Session
         if(payload.email !== userInfo2.email){
@@ -59,20 +59,20 @@ export const authorizationMiddleware: MiddlewareFn<Context> = async({ context },
                 console.log(context.res);
             }   
             //
-            // if(expTime < 60*60*1000 && info.email === userInfo.email && token === userInfo.token){
-            //     console.log("Token refreshed");
-            //     const payload: any = {
-            //         userID: info.userID,
-            //         email: info.email,
-            //         firstName: info.firstName,
-            //         lastName: info.lastName,
-            //     };
-            //     const newToken: string = await generateToken(payload);
-            //     userInfo.token = newToken;
-            //     context.res.set('Access-Control-Expose-Headers','x-refresh-token');
-            //     context.res.set('x-refresh-token', newToken);
-            //     console.log(context.res);
-            // }
+            if(expTime < 60*60*1000 && info.email === userInfo.email && token === userInfo.token){
+                console.log("Token refreshed");
+                const payload: any = {
+                    userID: info.userID,
+                    email: info.email,
+                    firstName: info.firstName,
+                    lastName: info.lastName,
+                };
+                const newToken: string = await generateToken(payload);
+                userInfo.token = newToken;
+                context.res.set('Access-Control-Expose-Headers','x-refresh-token');
+                context.res.set('x-refresh-token', newToken);
+                console.log(context.res);
+            }
         }
         throw new AuthenticationError(error.name);
     }

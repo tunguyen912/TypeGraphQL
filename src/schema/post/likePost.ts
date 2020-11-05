@@ -4,7 +4,7 @@ import { findUserByIdController, findUserController } from "../../controllers/us
 import { authorizationMiddleware } from "../../middlewares/authorizationMiddleware";
 import { isAuthenticated } from "../../middlewares/isAuthenticatedMiddleware";
 import { Context } from "../../model/types/Context";
-import { ILikePostPayload } from "../../model/types/IPostPayload.model";
+import { ILikePostPayload } from "../../model/types/ILikePostPayload.model";
 import { LIKE_POST_TOPIC } from "../../utils/constants/postConstants"
 import { User } from "../schema";
 
@@ -25,8 +25,11 @@ class LikeSubResponse{
     @Field(() => User)
     owner: User;
 
+    // @Field()
+    // content: string;
+    
     @Field()
-    content: string;
+    _id: String;
 
     @Field()
     likes: number;
@@ -58,7 +61,7 @@ export class likeResolver{
         const userLike = await findUserController(context.req.session.user.email);
         const payload: ILikePostPayload = {
             userLike,
-            content: result.content,
+            _id: result._id,
             likes: result.likes,
             owner
         }
@@ -67,14 +70,14 @@ export class likeResolver{
     }
     @Subscription(() => LikeSubResponse, {
         topics: LIKE_POST_TOPIC,
-        filter: ({ payload, args }) => {
-            return payload.data.owner.email === args.owner && payload.isLike
+        // filter: ({ payload, args }) => {
+        //     return payload.data.owner.email === args.owner && payload.isLike
             // return payload.data.owner.email === args.owner 
-        }
+        // }
     })
     likePostSub(
         @Root() payload,
-        @Arg('owner') owner: string,
+        // @Arg('owner') owner: string,
     ): LikeSubResponse{
         return payload.data;
     }

@@ -46,13 +46,13 @@ export class CommentResolver{
     }
     @Subscription(() => CommentDataResponse, {
         topics: ADD_COMMENT_TOPIC,
-        filter: ({ payload, args }) => {
-            return payload.owner.email === args.owner
-        }
+        // filter: ({ payload, args }) => {
+        //     return payload.owner.email === args.owner
+        // }
     })
     commentSub(
         @Root() payload,
-        @Arg('owner') owner: string
+        // @Arg('owner') owner: string
     ): CommentDataResponse{
         return payload.data;
     }

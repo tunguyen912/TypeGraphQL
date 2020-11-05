@@ -1,8 +1,13 @@
+import { ICommentPayload } from "./ICommentPayload.model";
 import { User } from "../user/userModel";
 
-export interface ILikePostPayload {
-    userLike: User;
+export interface IPostPayload {
+    _id: string;
+    owner: User;
     content: string;
     likes: number;
-    owner: User;
+    listOfLike: User[];
+    createdAt: Date;
+    comments: number; 
+    listOfComment: ICommentPayload[];
 }

@@ -1,10 +1,10 @@
-import { Arg, Field, Mutation, ObjectType, Query, Resolver } from "type-graphql";
-import { getAllPostController, getPostByIdController } from "../../controllers/post/postController";
+import { Arg, Field, ObjectType, Query, Resolver } from "type-graphql";
+import { getAllPostController, getPostByIdController, getPostByOwnerIdController } from "../../controllers/post/postController";
 import { CommentDataResponse } from '../schema'
 import { User } from "../schema";
 
 @ObjectType()
-class Post{
+export class Post{
     @Field()
     _id: string;
 
@@ -41,4 +41,11 @@ export class GetPostResolver{
         @Arg('postId') postId: string
     ): Promise<Post> {
         return await getPostByIdController(postId);
-    }}
+    }
+    @Query(() => [Post])
+    async getPostByOwnerId(
+        @Arg('ownerId') ownerId: string
+    ): Promise<Post[]>{
+        return await getPostByOwnerIdController(ownerId) as unknown as Array<Post>;
+    }
+}
