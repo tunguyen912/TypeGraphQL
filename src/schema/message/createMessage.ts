@@ -1,11 +1,15 @@
 import { Arg, Ctx, Field, InputType, Mutation, ObjectType, PubSub, PubSubEngine, Query, Resolver, Root, Subscription, UseMiddleware } from "type-graphql";
+// Controller
 import { createMessageController } from "../../controllers/message/messageController";
+// Middleware
 import { authorizationMiddleware } from "../../middlewares/authorizationMiddleware";
 import { isAuthenticated } from "../../middlewares/isAuthenticatedMiddleware";
+// Model
 import { Context } from "../../model/types/Context";
 import { IMessagePayload } from "../../model/types/IMessagePayload.model";
-import { NEW_MESSAGE_TOPIC } from "../../utils/constants/messageConstants";
 import { Message } from "../schema";
+
+import { NEW_MESSAGE_TOPIC } from "../../utils/constants/messageConstants";
 
 @InputType()
 export class messageData{

@@ -1,16 +1,20 @@
-import { Message, MessageModel } from '../../model/message/messageModel';
+import redisClient from '../../config/redisConfig';
+import { mongo } from 'mongoose';
+// Utils
 import { defaultResponse, getUserClientId } from '../../utils/utils';
+// Model
+import { MessageModel } from '../../model/message/messageModel';
+import { UserModel } from '../../model/user/userModel';
+import { Context } from '../../model/types/Context';
+// Schema
+import { messageData } from '../../schema//message/createMessage';
+// Constants
 import { SEND_MESSAGE_SUCCESS } from '../../utils/constants/messageConstants'
 import { ERROR } from '../../utils/constants/messageConstants';
-import { Context } from '../../model/types/Context';  
-import { ISession } from '../../model/types/ISession.model';
-import { UserModel } from '../../model/user/userModel';
-import { messageData } from '../../schema//message/createMessage';
-import { mongo } from 'mongoose';
+// Interface
 import { IUserPayload } from '../../model/types/IUserPayload.model';
-import redisClient from '../../config/redisConfig';
 
-export async function createMessageController(messageData: messageData, context: Context) {
+export const createMessageController = async (messageData: messageData, context: Context) => {
     const { toUser, messageContent } = messageData;
     const clientDeviceID: string = getUserClientId(context.req);
     const userInfo = await redisClient.hgetall(clientDeviceID) as unknown as IUserPayload;
@@ -28,7 +32,7 @@ export async function createMessageController(messageData: messageData, context:
     throw new Error(ERROR);
 }
 
-async function getConversationIdHelper(fromID: String, toID: String): Promise<String> {
+const getConversationIdHelper = async (fromID: String, toID: String): Promise<String> => {
     const _idFrom = mongo.ObjectId(fromID);
     const _idTo = mongo.ObjectId(toID);
     let conversationID = `${fromID}-${toID}`
@@ -38,7 +42,7 @@ async function getConversationIdHelper(fromID: String, toID: String): Promise<St
     return conversationID;
 }
 
-export async function getConversationController(context: Context, withUser: string) {
+export const getConversationController = async (context: Context, withUser: string) => {
     const clientDeviceID: string = getUserClientId(context.req);
     const userInfo = await redisClient.hgetall(clientDeviceID) as unknown as IUserPayload;
     const user2 = await UserModel.findOne({email: withUser});

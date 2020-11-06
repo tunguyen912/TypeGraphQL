@@ -13,13 +13,13 @@ const main = async () => {
   
     const apolloServer = new ApolloServer({ 
       schema,
-      context: ({ req, res }) => {
+      context: ({ req, res, }) => {
         const context = new Context();
         context.req = req;
         context.res = res;
         return context
-      }  
-     });
+      } 
+    });
   
     apolloServer.installSubscriptionHandlers(httpServer)
     apolloServer.applyMiddleware({ app, cors: false });

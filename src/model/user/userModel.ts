@@ -15,8 +15,5 @@ export class User {
   
   @prop({ required: true})
   password: string;
-
-  @prop({ required: true, default: false })
-  isLogin: boolean;
 }
 export const UserModel = getModelForClass(User);

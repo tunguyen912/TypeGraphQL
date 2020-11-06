@@ -8,7 +8,6 @@ export const LOG_OUT_SUCCESS = 'Successfully log out';
 export const INVALID_EMAIL_TYPE = 'Invalid email type';
 export const AUTHEN_ERROR = 'Please Log In first !!!';
 export const ALREADY_LOGGED_IN = 'Please Log Out first !!!';
-export const ACCOUNT_LOGGED_IN = 'This account has logged in!';
 export const INVALID_USER = 'INVALID_USER';
 export const DEVICE_ID_NOT_FOUND = 'Device ID not found';
 

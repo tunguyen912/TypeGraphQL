@@ -1,11 +1,16 @@
 import { Arg, Ctx, Field, InputType, Mutation, ObjectType, PubSub, PubSubEngine, Resolver, Root, Subscription, UseMiddleware } from "type-graphql";
+// Controllers
 import { createPostController } from "../../controllers/post/postController";
-import { isAuthenticated } from "../../middlewares/isAuthenticatedMiddleware";
+// Models
 import { Context } from "../../model/types/Context";
 import { Post } from "../schema";
-import { CREATE_POST_TOPIC } from "../../utils/constants/postConstants";
 import { IPostPayload } from "../../model/types/IPostPayload.model";
+// Middlewares
 import { authorizationMiddleware } from "../../middlewares/authorizationMiddleware";
+import { isAuthenticated } from "../../middlewares/isAuthenticatedMiddleware";
+
+import { CREATE_POST_TOPIC } from "../../utils/constants/postConstants";
+
 
 @InputType()
 export class postData{

@@ -1,12 +1,11 @@
 import { MiddlewareFn } from "type-graphql";
-import { Context } from "../model/types/Context";
 import * as jwt from 'jsonwebtoken'
-import { ISession } from '../model/types/ISession.model';
-import { IUserPayload } from "../model/types/IUserPayload.model";
-import { AuthenticationError } from "apollo-server-express";
-// Redis
 import redisClient from '../config/redisConfig';
-import * as redis from 'redis';
+import { AuthenticationError } from "apollo-server-express";
+// Model
+import { Context } from "../model/types/Context";
+import { IUserPayload } from "../model/types/IUserPayload.model";
+// Utils
 import { getUserClientId } from "../utils/utils";
 
 const generateToken = (payload: IUserPayload): string => {
@@ -32,9 +31,6 @@ export const authorizationMiddleware: MiddlewareFn<Context> = async({ context },
             console.log('TokenExpiredError');
             const info: any = jwt.decode(token);
             const expTime: number = Date.now() - info.exp * 1000;
-            // console.log(`Expire Time: ${expTime}`);
-            // console.log(`Token Info: ${info}`);
-            //  Skip expTime < 1h ??
             if(expTime < 60*60*1000 && info.email === userInfo.email && token === userInfo.token){
                 console.log('Token refreshed');
                 const payload: any = {
@@ -44,12 +40,11 @@ export const authorizationMiddleware: MiddlewareFn<Context> = async({ context },
                 };
                 const newToken: string = await generateToken(payload);
                 redisClient.hmset(clientDeviceID, 'email', info.email, 'firstName', info.firstName, 'lastName', info.lastName, 'token', newToken); 
-                redisClient.expire(clientDeviceID, 2*3600); 
+                redisClient.expire(clientDeviceID, Number(process.env.REDIS_EXPIRE_TIME)); 
                 context.res.set('Access-Control-Expose-Headers','x-refresh-token');
                 context.res.set('x-refresh-token', newToken);
                 console.log(context.res);
             }   
-           
         }
         throw new AuthenticationError(error.name);
     }

@@ -1,10 +1,14 @@
 import { Arg, Field, InputType, Mutation, ObjectType, PubSub, PubSubEngine, Resolver, Root, Subscription, UseMiddleware } from "type-graphql";
-import { isAuthenticated } from "../../middlewares/isAuthenticatedMiddleware";
-import { deleteCommentController } from "../../controllers/comment/commentController"
-import { IPostPayload } from "../../model/types/IPostPayload.model";
-import { DELETE_COMMENT_TOPIC } from "../../utils/constants/commentConstants";
+// Model
 import { Post } from "../schema";
+import { IPostPayload } from "../../model/types/IPostPayload.model";
+// Controller
+import { deleteCommentController } from "../../controllers/comment/commentController"
+
+import { DELETE_COMMENT_TOPIC } from "../../utils/constants/commentConstants";
+// Middlewares
 import { authorizationMiddleware } from "../../middlewares/authorizationMiddleware";
+import { isAuthenticated } from "../../middlewares/isAuthenticatedMiddleware";
 
 @ObjectType()
 class DeleteCommentResponse{

@@ -1,7 +1,10 @@
 import { Arg, Ctx, Query, Resolver, UseMiddleware } from "type-graphql";
+// Controller
 import { getConversationController } from "../../controllers/message/messageController";
+// Middlewares
 import { authorizationMiddleware } from "../../middlewares/authorizationMiddleware";
 import { isAuthenticated } from "../../middlewares/isAuthenticatedMiddleware";
+// Models
 import { Context } from "../../model/types/Context";
 import { Message } from "../schema";
 

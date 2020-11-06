@@ -1,11 +1,14 @@
 import { Arg, Ctx, Field, InputType, Mutation, Resolver, UseMiddleware, PubSub, PubSubEngine, Subscription, Root } from "type-graphql";
-import { isAuthenticated } from "../../middlewares/isAuthenticatedMiddleware";
-import { CommentDataResponse } from "../schema";
 import { updateCommentController } from "../../controllers/comment/commentController"
+// Model
 import { Context } from "../../model/types/Context";
+import { CommentDataResponse } from "../schema";
 import { ICommentPayload } from "../../model/types/ICommentPayload.model";
+
 import { UPDATE_COMMENT_TOPIC } from "../../utils/constants/commentConstants";
+// Middlewares
 import { authorizationMiddleware } from "../../middlewares/authorizationMiddleware";
+import { isAuthenticated } from "../../middlewares/isAuthenticatedMiddleware";
 
 @InputType()
 class UpdateCommentData{
@@ -29,6 +32,7 @@ export class UpdateCommentResolver{
         const { commentID, newCommentContent } = updateCommentData;
         const newComment = await updateCommentController(commentID, newCommentContent);
         const payload: ICommentPayload = {
+            _id: newComment._id,
             content: newComment.content,
             owner: newComment.owner,
             createdAt: newComment.createdAt

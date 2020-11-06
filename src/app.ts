@@ -29,13 +29,12 @@ const connectSession = ExpressSession({
   }
 })
 app.use(cors({
-  origin: ['http://10.1.16.186:3000', 'http://10.1.16.188:3000', 'http://localhost:3000', 'http://10.1.16.187:3000'],
-  allowedHeaders: ['X-Requested-With', 'X-HTTP-Method-Override', 'Content-Type', 'Accept', 'Authorization', 'Device-ID'],
+  origin: ['http://10.1.16.186:3000', 'http://10.1.16.188:3000', 'http://localhost:3000', 'http://10.1.16.187:3000', 'http://10.1.16.189:3001'],
+  allowedHeaders: ['X-Requested-With', 'X-HTTP-Method-Override', 'Content-Type', 'Accept', 'Authorization'],
   credentials: true,
   methods: ['POST', 'GET'],
 }));
 
 app.use(connectSession);
-
 
 export default app;

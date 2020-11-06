@@ -1,15 +1,19 @@
 import { Arg, Ctx, Field, Mutation, ObjectType, Resolver, PubSub, PubSubEngine, UseMiddleware, Subscription, Root, Query } from "type-graphql";
 import redisClient from "../../config/redisConfig";
+// Controllers
 import { getListOfLikesController, likePostController } from "../../controllers/post/postController";
-import { findUserByIdController, findUserController } from "../../controllers/user/userControllers";
+import { findUserController } from "../../controllers/user/userControllers";
+// Middlewares
 import { authorizationMiddleware } from "../../middlewares/authorizationMiddleware";
 import { isAuthenticated } from "../../middlewares/isAuthenticatedMiddleware";
+// Models
 import { Context } from "../../model/types/Context";
 import { ILikePostPayload } from "../../model/types/ILikePostPayload.model";
 import { IUserPayload } from "../../model/types/IUserPayload.model";
+import { User } from "../schema";
+// Utils
 import { LIKE_POST_TOPIC } from "../../utils/constants/postConstants"
 import { getUserClientId } from "../../utils/utils";
-import { User } from "../schema";
 
 @ObjectType()
 class LikeResponse{
@@ -57,18 +61,18 @@ export class likeResolver{
         @Ctx() context: Context,
         @PubSub() pubSub: PubSubEngine
     ): Promise<LikeResponse> {
-        const { result, isLike, response } = await likePostController(postID, context);
-        const owner = await findUserByIdController(result.owner);
+        const { data, response } = await likePostController(postID, context);
+        const owner = await findUserController(data.owner.email);
         const clientDeviceID: string = getUserClientId(context.req);
         const userInfo = await redisClient.hgetall(clientDeviceID) as unknown as IUserPayload;
         const userLike = await findUserController(userInfo.email);
         const payload: ILikePostPayload = {
             userLike,
-            _id: result._id,
-            likes: result.likes,
+            _id: data._id,
+            likes: data.likes,
             owner
         }
-        pubSub.publish(LIKE_POST_TOPIC, { data: payload, isLike });
+        pubSub.publish(LIKE_POST_TOPIC, payload );
         return response;
     }
     @Subscription(() => LikeSubResponse, {
@@ -82,6 +86,6 @@ export class likeResolver{
         @Root() payload,
         // @Arg('owner') owner: string,
     ): LikeSubResponse{
-        return payload.data;
+        return payload;
     }
 }

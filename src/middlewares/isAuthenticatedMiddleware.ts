@@ -1,12 +1,12 @@
 import { MiddlewareFn } from "type-graphql";
-import { Context } from "../model/types/Context";
-import { AUTHEN_ERROR, ALREADY_LOGGED_IN } from "../utils/constants/userConstants";
-
-// Redis 
 import redisClient from '../config/redisConfig';
-import * as redis from 'redis';
+
+// Utils 
+import { AUTHEN_ERROR, ALREADY_LOGGED_IN } from "../utils/constants/userConstants";
 import { getUserClientId } from "../utils/utils";
+// Interface
 import { IUserPayload } from "../model/types/IUserPayload.model";
+import { Context } from "../model/types/Context";
 
 export const isAuthenticated: MiddlewareFn<Context> = async ({ context }, next) => {
     const clientDeviceID: string = getUserClientId(context.req);

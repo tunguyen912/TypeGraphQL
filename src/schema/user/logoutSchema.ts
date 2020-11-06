@@ -1,5 +1,5 @@
 import { Mutation, Resolver, Ctx, ObjectType, Field, UseMiddleware, Arg } from 'type-graphql';
-import { logOutController, logOutByEmailController } from '../../controllers/user/userControllers';
+import { logOutController } from '../../controllers/user/userControllers';
 import { isAuthenticated } from '../../middlewares/isAuthenticatedMiddleware';
 import { Context } from '../../model/types/Context';
 
@@ -23,11 +23,11 @@ export class LogoutResolver{
     }
 
     // For test only
-    @Mutation(() => LogoutResponse)
-    async logOutByEmail(
-        @Arg('email') email: string
-    ): Promise<LogoutResponse>{
-        return await logOutByEmailController(email)
-    }
+    // @Mutation(() => LogoutResponse)
+    // async logOutByEmail(
+    //     @Arg('email') email: string
+    // ): Promise<LogoutResponse>{
+    //     return await logOutByEmailController(email)
+    // }
 }
 

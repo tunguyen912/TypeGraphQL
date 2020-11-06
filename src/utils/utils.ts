@@ -10,20 +10,21 @@ import { IClientBrowser } from '../model/types/IClientBrowser.model';
 import { IClientOs } from '../model/types/IClientOs.model';
 import { IClientDevice } from '../model/types/IClientDevice.model';
 import { IUserClientData } from '../model/types/IUserClientData.model';
+import { IDefaultResponse, ILoginResponse } from '../model/types/IResponse.model';
 
-export async function hashPasswordAsync(password: String): Promise<String>{
+export const hashPasswordAsync = async(password: String): Promise<String> => {
     return await (bcrypt.hash(password, Number(process.env.BCRYPT_SALT_NUMBER)));
 }
 
-export async function comparePasswordAsync(password: String, hashedPassword: String) {
+export const comparePasswordAsync = async (password: String, hashedPassword: String): Promise<Boolean> => {
     return await bcrypt.compare(password, hashedPassword);
 }
 
-export const genJWT = (payload: IUserPayload, secretKey: string, expireTime: string) => {
+export const genJWT = (payload: IUserPayload, secretKey: string, expireTime: string): string => {
     return jwt.sign(payload, secretKey, { expiresIn: expireTime })
 }
 
-export const defaultResponse = (isSuccess: boolean, message = null) => {
+export const defaultResponse = (isSuccess: boolean, message = null): IDefaultResponse => {
     return {
         isSuccess,
         message
@@ -37,7 +38,7 @@ export const updatePostResponse = (isSuccess: boolean, message = null, newPostCo
         updatedAt,
     }
 }
-export const logInResponse = (isSuccess: boolean, message = null, jwt = null) => {
+export const logInResponse = (isSuccess: boolean, message = null, jwt = null): ILoginResponse => {
     return {
         isSuccess,
         message,
