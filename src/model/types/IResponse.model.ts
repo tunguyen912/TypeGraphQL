@@ -1,4 +1,4 @@
-import { IPostPayload } from "./IPostPayload.model";
+import { ICommentPayload, IPostPayload, IMessagePayload } from "./IPayload.model";
 
 export interface IDefaultResponse {
     isSuccess: boolean,
@@ -13,5 +13,15 @@ export interface ILoginResponse {
 
 export interface IPostResponse {
     data: IPostPayload,
+    response: IDefaultResponse
+}
+
+export interface ICommentResponse {
+    data: ICommentPayload,
+    response: IDefaultResponse
+}
+
+export interface IMessageResponse {
+    data: IMessagePayload,
     response: IDefaultResponse
 }

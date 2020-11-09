@@ -18,10 +18,10 @@ const main = async () => {
         context.req = req;
         context.res = res;
         return context
-      } 
+      }
     });
   
-    apolloServer.installSubscriptionHandlers(httpServer)
+    apolloServer.installSubscriptionHandlers(httpServer);
     apolloServer.applyMiddleware({ app, cors: false });
     
     // httpServer.listen(4000, () => {

@@ -2,15 +2,11 @@ import * as Express from 'express';
 import * as cors from 'cors';
 import * as ExpressSession from 'express-session';
 import * as mongoConnect from 'connect-mongo';
-import dbConnection from './config/mongoConfig';
+import dbConnection from './config/Mongo.Config';
 import { mongoose } from '@typegoose/typegoose'; 
 
-// import { machineIdSync } from 'node-machine-id';
-// const deviceID = machineIdSync(true);
-// console.log(deviceID);
-
 require('dotenv').config();
-require('./config/redisConfig');
+require('./config/Redis.Config');
 
 
 const app = Express();

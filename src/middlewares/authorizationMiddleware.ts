@@ -1,12 +1,13 @@
 import { MiddlewareFn } from "type-graphql";
 import * as jwt from 'jsonwebtoken'
-import redisClient from '../config/redisConfig';
+import redisClient from '../config/Redis.Config';
 import { AuthenticationError } from "apollo-server-express";
 // Model
 import { Context } from "../model/types/Context";
-import { IUserPayload } from "../model/types/IUserPayload.model";
+import { IUserPayload } from "../model/types/IPayload.model";
 // Utils
-import { getUserClientId } from "../utils/utils";
+import SecureUtil from "../utils/Secure.utils";
+import { BAD_TOKEN } from "../utils/constants/Error.Constants";
 
 const generateToken = (payload: IUserPayload): string => {
     const payloadObj: object = {...payload};
@@ -16,14 +17,13 @@ const generateToken = (payload: IUserPayload): string => {
 export const authorizationMiddleware: MiddlewareFn<Context> = async({ context }, next) => {
     const jwtReq: string = context.req.headers.authorization;
     const token: string = jwtReq.replace("Bearer ", "");
-    const clientDeviceID: string = getUserClientId(context.req);
-    // console.log(typeof userInfo2) print object but when I tried to get userInfo2.email, got an error: cannot get email of boolean??????  
+    const clientDeviceID: string = SecureUtil.getUserClientId(context.req);  
     const userInfo = await redisClient.hgetall(clientDeviceID) as unknown as IUserPayload;
     
     try {
         const payload: IUserPayload = await jwt.verify(token, process.env.JWT_SECRET_KEY);
         if(payload.email !== userInfo.email){
-            throw new Error('Bad token!')
+            throw new Error(BAD_TOKEN);
         }
         return next()
     } catch(error){

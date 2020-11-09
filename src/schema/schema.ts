@@ -1,18 +1,11 @@
 import { buildSchemaSync, Field, ObjectType } from "type-graphql";
 import { PubSub } from 'apollo-server-express';
 
-import { RegisterResolver } from './user/registerSchema';
-import { LoginResolver } from './user/loginSchema';
-import { LogoutResolver } from "./user/logoutSchema";
-import { PostResolver } from "./post/createPost";
-import { likeResolver } from "./post/likePost";
-import { messageResolver } from "./message/createMessage";
-import { CommentResolver } from "./comment/addComment";
-import { messageQueryResolver } from "./message/getMessage";
-import { GetPostResolver } from "./post/getPost";
-import { UpdateCommentResolver } from "./comment/updateComment";
-import { DeleteCommentResolver } from "./comment/deleteComment";
-import { ModifyPostResolver } from "./post/ModifyPost";
+import { UserResolver } from './user/User.Schema';
+import { PostResolver } from "./post/Post.Schema";
+import { LikeResolver } from "./post/LikePost.Schema";
+import { MessageResolver } from "./message/Message.Schema";
+import { CommentResolver } from "./comment/Comment.Schema";
 
 @ObjectType()
 export class User{
@@ -88,8 +81,7 @@ export class Post{
 
 const pubSub = new PubSub()
 export const schema = buildSchemaSync({
-    resolvers: [RegisterResolver, LoginResolver, LogoutResolver, messageResolver, PostResolver, ModifyPostResolver,
-                likeResolver, CommentResolver, messageQueryResolver, GetPostResolver, UpdateCommentResolver, DeleteCommentResolver],
+    resolvers: [UserResolver, MessageResolver, PostResolver, LikeResolver, CommentResolver],
     pubSub,
     dateScalarMode: 'isoDate',
 });
