@@ -14,15 +14,12 @@ class SecureUtil{
     public async comparePasswordAsync(password: String, hashedPassword: String): Promise<Boolean>{
         return await bcrypt.compare(password, hashedPassword);
     }
-
     public genJWT = (payload: IUserPayload, secretKey: string, expireTime: string): string =>{
         return jwt.sign(payload, secretKey, { expiresIn: expireTime });
     }
-
     public async hashPasswordAsync(password: String): Promise<String>{
         return await (bcrypt.hash(password, Number(process.env.BCRYPT_SALT_NUMBER)));
     }
-
     public getUserClientId = (req: Request): string => {
         const deviceDetector = new DeviceDetector();
         const deviceDetail: DeviceDetectorResult = deviceDetector.parse(req.headers['user-agent'] as string);

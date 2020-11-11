@@ -53,6 +53,15 @@ export class CommentDataResponse{
 }
 
 @ObjectType()
+export class DefaultResponse{
+    @Field()
+    isSuccess: boolean;
+
+    @Field({ nullable: true })
+    message?: string;
+}
+
+@ObjectType()
 export class Post{
     @Field()
     _id: string;

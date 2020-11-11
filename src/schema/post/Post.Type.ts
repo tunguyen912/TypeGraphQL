@@ -1,4 +1,5 @@
 import { Field, InputType, ObjectType } from "type-graphql";
+import { User } from '../schema';
 // Input
 @InputType()
 export class paginationInput{
@@ -23,28 +24,19 @@ export class UpdatePostData{
     @Field()
     newPostContent: string;
 }
+
 // Data
 @ObjectType()
-export class PostResponse{
+export class LikeSubResponse{
+    @Field(() => User)
+    userLike: User;
+
+    @Field(() => User)
+    owner: User;
+    
     @Field()
-    isSuccess: boolean;
+    _id: String;
 
-    @Field({ nullable: true })
-    message?: string;
-}
-
-@ObjectType()
-// Dung cho Sub
-export class UpdatePostResponse{
     @Field()
-    isSuccess: boolean;
-
-    @Field({nullable: true})
-    message?: string;
-
-    @Field({nullable: true})
-    updatedAt?: Date;
-
-    @Field({nullable: true})
-    newPostContent?: string;
+    likes: number;
 }

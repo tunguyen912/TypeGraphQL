@@ -1,4 +1,4 @@
-import { Field, InputType, ObjectType } from "type-graphql";
+import { Field, InputType } from "type-graphql";
 // Input
 @InputType()
 export class commentData{
@@ -26,22 +26,3 @@ export class UpdateCommentData{
     @Field()
     newCommentContent: string;
 }
-// Data
-@ObjectType()
-export class CommentResponse{
-    @Field()
-    isSuccess: boolean;
-
-    @Field({nullable: true})
-    message?: string;
-}
-
-@ObjectType()
-export class DeleteCommentResponse{
-    @Field()
-    isSuccess: boolean;
-
-    @Field({nullable: true})
-    message?: string;
-}
-

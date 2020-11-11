@@ -25,24 +25,6 @@ export class RegisterData {
 }
 // Data
 @ObjectType()
-export class LogoutResponse{
-    @Field()
-    isSuccess: boolean;
-
-    @Field({ nullable: true })
-    message?: string;
-}
-
-@ObjectType()
-export class RegisterResponse{
-    @Field()
-    isSuccess: boolean;
-
-    @Field({nullable: true})
-    message?: string;
-}
-
-@ObjectType()
 export class LoginResponse {
     @Field()
     isSuccess: boolean;

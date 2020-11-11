@@ -1,4 +1,4 @@
-import { Field, InputType, ObjectType } from "type-graphql";
+import { Field, InputType } from "type-graphql";
 
 @InputType()
 export class messageData{
@@ -7,13 +7,4 @@ export class messageData{
 
     @Field()
     messageContent: string;
-}
-
-@ObjectType()
-export class MessageResponse{
-    @Field()
-    isSuccess: boolean;
-
-    @Field({nullable: true})
-    message?: string;
 }

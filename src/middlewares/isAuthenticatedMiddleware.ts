@@ -10,7 +10,7 @@ import { Context } from "../model/types/Context";
 export const isAuthenticated: MiddlewareFn<Context> = async ({ context }, next) => {
     const clientDeviceID: string = SecureUtil.getUserClientId(context.req);
     const userInfo = await redisClient.hgetall(clientDeviceID) as unknown as IUserPayload;
-    if(!userInfo.email) throw new Error(AUTHEN_ERROR);
+    if(!userInfo) throw new Error(AUTHEN_ERROR);
     return next();
 }
 

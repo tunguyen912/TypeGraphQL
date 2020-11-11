@@ -1,14 +1,14 @@
 import { Arg, Ctx, Mutation, PubSub, PubSubEngine, Query, Resolver, Root, Subscription, UseMiddleware } from "type-graphql";
 // Controller
-import { createMessageController, getConversationController } from "../../controllers/Message.Controller";
+import MessageController from "../../controllers/Message.Controller";
 // Middleware
 import { authorizationMiddleware } from "../../middlewares/authorizationMiddleware";
 import { isAuthenticated } from "../../middlewares/isAuthenticatedMiddleware";
 // Model
 import { Context } from "../../model/types/Context";
 import { IMessagePayload } from "../../model/types/IPayload.model";
-import { Message } from "../schema";
-import { messageData, MessageResponse } from "./Message.Type";
+import { Message, DefaultResponse } from "../schema";
+import { messageData } from "./Message.Type";
 
 import { NEW_MESSAGE_TOPIC } from "../../utils/constants/Message.Constants";
 
@@ -22,27 +22,29 @@ export class MessageResolver{
         @Arg('withUser') withUser: string,
         @Ctx() context: Context
     ): Promise<Message[]> {
-        return await getConversationController(context, withUser);
+        return await MessageController.getConversationController(context, withUser);
     }
     // Mutation
     @UseMiddleware(isAuthenticated)
     @UseMiddleware(authorizationMiddleware)
-    @Mutation(() => MessageResponse)
+    @Mutation(() => DefaultResponse)
     async sendMessage(
         @Arg('data') messageData: messageData,
         @Ctx() context: Context,
         @PubSub() pubSub: PubSubEngine
-    ): Promise<MessageResponse> {
-        const { data, response } =  await createMessageController(messageData, context)
-        const payload: IMessagePayload = {
-            _id: data._id,
-            messageFrom: data.messageFrom,
-            messageTo: data.messageTo,
-            messageContent: data.messageContent,
-            conversationID: data.conversationID,
-            createdAt: data.createdAt,
+    ): Promise<DefaultResponse> {
+        const { data, response } =  await MessageController.createMessageController(messageData, context);
+        if(data){
+            const payload: IMessagePayload = {
+                _id: data._id,
+                messageFrom: data.messageFrom,
+                messageTo: data.messageTo,
+                messageContent: data.messageContent,
+                conversationID: data.conversationID,
+                createdAt: data.createdAt,
+            }
+            pubSub.publish(NEW_MESSAGE_TOPIC, payload);
         }
-        pubSub.publish(NEW_MESSAGE_TOPIC, payload)
         return response;
     }
     // Subscription

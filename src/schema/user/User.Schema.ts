@@ -1,9 +1,9 @@
 import { Arg, Mutation, Resolver, Ctx, Query, UseMiddleware } from "type-graphql";
-import { findMeController, logInController, registerController, logOutController } from '../../controllers/User.Controllers'
+import UserController from '../../controllers/User.Controllers'
 import { isAuthenticated, isNotAuthenticated } from "../../middlewares/isAuthenticatedMiddleware";
 import { Context } from "../../model/types/Context";
-import { User } from "../schema";
-import { LoginData, LoginResponse, LogoutResponse, RegisterData, RegisterResponse } from "./User.Type";
+import { User, DefaultResponse } from "../schema";
+import { LoginData, LoginResponse, RegisterData } from "./User.Type";
 
 @Resolver()
 export class UserResolver {
@@ -13,7 +13,7 @@ export class UserResolver {
     async me(
         @Ctx() context: Context
     ): Promise<User> {
-        return await findMeController(context);
+        return await UserController.findMeController(context);
     }
     //Mutation
     @UseMiddleware(isNotAuthenticated)
@@ -22,21 +22,21 @@ export class UserResolver {
         @Arg('data') loginData: LoginData,
         @Ctx() context: Context
     ): Promise<LoginResponse> {
-        return await logInController(loginData, context);
+        return await UserController.logInController(loginData, context);
     }
 
-    @Mutation(() => RegisterResponse)
+    @Mutation(() => DefaultResponse)
     async register (
         @Arg("data") registerData: RegisterData,
-    ): Promise<RegisterResponse>{
-       return await registerController(registerData);
+    ): Promise<DefaultResponse>{
+       return await UserController.registerController(registerData);
     }
 
     @UseMiddleware(isAuthenticated)
-    @Mutation(() => LogoutResponse)
+    @Mutation(() => DefaultResponse)
     async logout(
         @Ctx() context: Context
-    ): Promise<LogoutResponse>{
-        return await logOutController(context);
+    ): Promise<DefaultResponse>{
+        return await UserController.logOutController(context);
     }
 }

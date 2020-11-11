@@ -1,5 +1,5 @@
-import redisClient from '../config/Redis.Config';
 import { mongo } from 'mongoose';
+// import redisClient from '../config/Redis.Config';
 // Utils
 import ResponseUtil from '../utils/Response.utils';
 import SecureUtil from '../utils/Secure.utils';
@@ -10,46 +10,49 @@ import { Context } from '../model/types/Context';
 // Schema
 import { messageData } from '../schema/message/Message.Type';
 // Constants
-import { SEND_MESSAGE_SUCCESS } from '../utils/constants/Message.Constants';
-import { ERROR } from '../utils/constants/Error.Constants';
+import { SEND_MESSAGE_SUCCESS, SEND_MESSAGE_FAIL} from '../utils/constants/Message.Constants';
 // Interface
 import { IUserPayload, IMessagePayload } from '../model/types/IPayload.model';
 import { IMessageResponse } from '../model/types/IResponse.model';
 
-export const createMessageController = async (messageData: messageData, context: Context): Promise<IMessageResponse> => {
-    const { toUser, messageContent } = messageData;
-    const clientDeviceID: string = SecureUtil.getUserClientId(context.req);
-    const userInfo = await redisClient.hgetall(clientDeviceID) as unknown as IUserPayload;
-    const from: IUserPayload = await UserModel.findOne({ email: userInfo.email });
-    const to: IUserPayload = await UserModel.findOne({ email: toUser });
-    const conversationID: string = await getConversationIdHelper(from._id, to._id);
-    const newMessage = new MessageModel({
-        messageFrom: from,
-        messageTo: to,
-        messageContent,
-        conversationID
-    })
-    let result: IMessagePayload = await newMessage.save();
-    if(result) return ResponseUtil.messageResponse(result, ResponseUtil.defaultResponse(true, SEND_MESSAGE_SUCCESS));
-    throw new Error(ERROR);
-}
-
-export const getConversationController = async (context: Context, withUser: string): Promise<IMessagePayload[]> => {
-    const clientDeviceID: string = SecureUtil.getUserClientId(context.req);
-    const userInfo = await redisClient.hgetall(clientDeviceID) as unknown as IUserPayload;
-    const user2: IUserPayload = await UserModel.findOne({ email: withUser });
-    const conversationID: string = await getConversationIdHelper(userInfo._id, user2._id);
-    return await MessageModel.find({ conversationID })
-    .populate('messageFrom', 'profileName email')
-    .populate('messageTo', 'profileName email');
-}
-
-const getConversationIdHelper = async (fromID: String, toID: String): Promise<string> => {
-    const _idFrom = mongo.ObjectId(fromID);
-    const _idTo = mongo.ObjectId(toID);
-    let conversationID: string = `${fromID}-${toID}`;
-    if (_idFrom <= _idTo) {
-        conversationID = `${toID}-${fromID}`;
+class MessageController{
+    private async getConversationIdHelper(fromID: String, toID: String): Promise<string> {
+        const _idFrom = mongo.ObjectId(fromID);
+        const _idTo = mongo.ObjectId(toID);
+        let conversationID: string = `${fromID}-${toID}`;
+        if (_idFrom <= _idTo) {
+            conversationID = `${toID}-${fromID}`;
+        }
+        return conversationID;
     }
-    return conversationID;
+    public async createMessageController(messageData: messageData, context: Context): Promise<IMessageResponse>{
+        const { toUser, messageContent } = messageData;
+        const clientDeviceID: string = SecureUtil.getUserClientId(context.req);
+        // const userInfo = await redisClient.hgetall(clientDeviceID) as unknown as IUserPayload;
+        const userInfo: IUserPayload = context.req.app.locals[clientDeviceID];
+        const from: IUserPayload = await UserModel.findOne({ email: userInfo.email });
+        const to: IUserPayload = await UserModel.findOne({ email: toUser });
+        const conversationID: string = await this.getConversationIdHelper(from._id, to._id);
+        const newMessage = new MessageModel({
+            messageFrom: from,
+            messageTo: to,
+            messageContent,
+            conversationID
+        })
+        let result: IMessagePayload = await newMessage.save();
+        if(result) return ResponseUtil.messageResponse(result, ResponseUtil.defaultResponse(true, SEND_MESSAGE_SUCCESS));
+        ResponseUtil.messageResponse(null, ResponseUtil.defaultResponse(true, SEND_MESSAGE_FAIL));
+    }
+    public async getConversationController(context: Context, withUser: string): Promise<IMessagePayload[]>{
+        const clientDeviceID: string = SecureUtil.getUserClientId(context.req);
+        // const userInfo = await redisClient.hgetall(clientDeviceID) as unknown as IUserPayload;
+        const userInfo: IUserPayload = context.req.app.locals[clientDeviceID];
+        const user2: IUserPayload = await UserModel.findOne({ email: withUser });
+        const conversationID: string = await this.getConversationIdHelper(userInfo._id, user2._id);
+        return await MessageModel.find({ conversationID })
+        .populate('messageFrom', 'profileName email')
+        .populate('messageTo', 'profileName email');
+    }
 }
+export default new MessageController();
+

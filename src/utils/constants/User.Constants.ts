@@ -8,4 +8,5 @@ export const INVALID_EMAIL_TYPE = 'Invalid email type';
 export const AUTHEN_ERROR = 'Please Log In first !!!';
 export const ALREADY_LOGGED_IN = 'Please Log Out first !!!';
 export const INVALID_USER = 'INVALID_USER';
+export const INVALID_PASSWORD = 'INVALID_PASSWORD';
 

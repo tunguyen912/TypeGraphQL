@@ -1,7 +1,6 @@
 import { Arg, Ctx, Mutation, PubSub, PubSubEngine, Query, Resolver, Root, Subscription, UseMiddleware } from "type-graphql";
-import { getAllPostController, getPostByIdController, getPostByOwnerIdController, createPostController, deletePostController, updatePostController } from "../../controllers/Post.Controller";
+import PostController from "../../controllers/Post.Controller";
 
-import { Post } from "../schema";
 // Middlewares
 import { authorizationMiddleware } from "../../middlewares/authorizationMiddleware";
 import { isAuthenticated } from "../../middlewares/isAuthenticatedMiddleware";
@@ -9,7 +8,9 @@ import { isAuthenticated } from "../../middlewares/isAuthenticatedMiddleware";
 import { Context } from "../../model/types/Context";
 import { IPostPayload } from "../../model/types/IPayload.model";
 import { CREATE_POST_TOPIC, UPDATE_POST_TOPIC } from "../../utils/constants/Post.Constants";
-import { paginationInput, postData, PostResponse, UpdatePostData } from "./Post.Type";
+import { paginationInput, postData, UpdatePostData } from "./Post.Type";
+import { Post, DefaultResponse } from "../schema";
+
 
 @Resolver()
 export class PostResolver{
@@ -19,16 +20,16 @@ export class PostResolver{
         @Arg('paginationInput', { nullable: true }) paginationInput: paginationInput
     ): Promise<Post[]> {
         if(paginationInput){
-            const { limit, cursor } = paginationInput
-            return await getAllPostController(limit, cursor);
+            const { limit, cursor } = paginationInput;
+            return await PostController.getAllPostController(limit, cursor);
         }
-        return await getAllPostController();
+        return await PostController.getAllPostController();
     }
     @Query(() => Post)
     async getPostById(
         @Arg('postId') postId: string,
     ): Promise<Post> {
-        return await getPostByIdController(postId);
+        return await PostController.getPostByIdController(postId);
     }
     @Query(() => [Post])
     async getPostByOwnerId(
@@ -37,20 +38,20 @@ export class PostResolver{
     ): Promise<Post[]>{
         if(paginationInput){
             const { limit, cursor } = paginationInput;
-            return await getPostByOwnerIdController(ownerId, limit, cursor);
+            return await PostController.getPostByOwnerIdController(ownerId, limit, cursor);
         }
-        return await getPostByOwnerIdController(ownerId);
+        return await PostController.getPostByOwnerIdController(ownerId);
     }
     // Mutation
     @UseMiddleware(isAuthenticated)
     @UseMiddleware(authorizationMiddleware)
-    @Mutation(() => PostResponse)
+    @Mutation(() => DefaultResponse)
     async createPost(
         @Arg('data') postData: postData,
         @PubSub() pubSub: PubSubEngine,
         @Ctx() context: Context,
-    ): Promise<PostResponse> {
-        const { data, response } = await createPostController(postData, context);
+    ): Promise<DefaultResponse> {
+        const { data, response } = await PostController.createPostController(postData, context);
         if(data){
             const payload: IPostPayload = {
                 _id: data._id,
@@ -68,23 +69,23 @@ export class PostResolver{
     }
     @UseMiddleware(isAuthenticated)
     @UseMiddleware(authorizationMiddleware)
-    @Mutation(() => PostResponse)
+    @Mutation(() => DefaultResponse)
     async deletePost(
         @Arg('postID') postID: string,
         @Ctx() context: Context
-    ): Promise<PostResponse> {
-       return await deletePostController(postID, context);
+    ): Promise<DefaultResponse> {
+       return await PostController.deletePostController(postID, context);
     }
     @UseMiddleware(isAuthenticated)
     @UseMiddleware(authorizationMiddleware)
-    @Mutation(() => PostResponse)
+    @Mutation(() => DefaultResponse)
     async updatePost(
         @Arg('data') updatePostData: UpdatePostData,
         @Ctx() context: Context,
         @PubSub() pubSub: PubSubEngine,
-    ): Promise<PostResponse> {
+    ): Promise<DefaultResponse> {
         const { postID, newPostContent } = updatePostData;
-        const { data, response } = await updatePostController(postID, newPostContent, context);
+        const { data, response } = await PostController.updatePostController(postID, newPostContent, context);
         if(data){
             const payload: IPostPayload = {
                 _id: data._id,
@@ -101,18 +102,14 @@ export class PostResolver{
         return response;
     }
     // Subscription
-    @Subscription(() => Post, {
-        topics: CREATE_POST_TOPIC,
-    })
+    @Subscription(() => Post, { topics: CREATE_POST_TOPIC })
     createPostSub(
         @Root() payload: IPostPayload,
     ): Post{
         return payload;
     }
 
-    @Subscription(() => Post, {
-        topics: UPDATE_POST_TOPIC,
-    })
+    @Subscription(() => Post, { topics: UPDATE_POST_TOPIC })
     updatePostSub(
         @Root() payload: IPostPayload,
     ): Post{

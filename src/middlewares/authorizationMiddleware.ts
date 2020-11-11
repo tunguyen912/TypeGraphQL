@@ -38,7 +38,8 @@ export const authorizationMiddleware: MiddlewareFn<Context> = async({ context },
                     firstName: info.firstName,
                     lastName: info.lastName,
                 };
-                const newToken: string = await generateToken(payload);
+                const newToken: string = generateToken(payload);
+                await redisClient.hdel(clientDeviceID, '_id', 'email', 'firstName', 'lastName', 'token');
                 redisClient.hmset(clientDeviceID, 'email', info.email, 'firstName', info.firstName, 'lastName', info.lastName, 'token', newToken); 
                 redisClient.expire(clientDeviceID, Number(process.env.REDIS_EXPIRE_TIME)); 
                 context.res.set('Access-Control-Expose-Headers','x-refresh-token');
@@ -46,6 +47,6 @@ export const authorizationMiddleware: MiddlewareFn<Context> = async({ context },
                 console.log(context.res);
             }   
         }
-        throw new AuthenticationError(error.name);
+        throw new AuthenticationError(error.message);
     }
 }
