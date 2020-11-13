@@ -7,7 +7,7 @@ import { Context } from "../model/types/Context";
 import { IUserPayload } from "../model/types/IPayload.model";
 // Utils
 import SecureUtil from "../utils/Secure.utils";
-import { BAD_TOKEN } from "../utils/constants/Error.Constants";
+import { BAD_TOKEN, TOKEN_EXPIRED_ERROR } from "../utils/constants/Error.Constants";
 
 const generateToken = (payload: IUserPayload): string => {
     const payloadObj: object = {...payload};
@@ -27,8 +27,8 @@ export const authorizationMiddleware: MiddlewareFn<Context> = async({ context },
         }
         return next()
     } catch(error){
-        if(error.name === "TokenExpiredError"){
-            console.log('TokenExpiredError');
+        if(error.name === TOKEN_EXPIRED_ERROR){
+            console.log(TOKEN_EXPIRED_ERROR);
             const info: any = jwt.decode(token);
             const expTime: number = Date.now() - info.exp * 1000;
             if(expTime < 60*60*1000 && info.email === userInfo.email && token === userInfo.token){

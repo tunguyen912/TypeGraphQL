@@ -33,6 +33,7 @@ export interface ILikePostPayload {
     likes: number;
     owner: User;
     _id: String;
+    listOfLike: User[];
 }
 
 export interface ICommentPayload {
@@ -40,4 +41,5 @@ export interface ICommentPayload {
     owner: User;
     content: string;
     createdAt: Date;
+    toPostId?: string;
 }

@@ -49,7 +49,10 @@ export class CommentDataResponse{
     content: string;
 
     @Field()
-    createdAt: Date
+    createdAt: Date;
+
+    @Field({nullable: true})
+    toPostId?: string;
 }
 
 @ObjectType()
@@ -63,8 +66,8 @@ export class DefaultResponse{
 
 @ObjectType()
 export class Post{
-    @Field()
-    _id: string;
+    @Field({ nullable: true })
+    _id?: string;
 
     @Field(() => User)
     owner: User;

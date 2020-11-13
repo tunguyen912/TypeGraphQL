@@ -17,7 +17,7 @@ import { PERMISSION_ERROR } from '../utils/constants/Error.Constants';
 // Schema
 import { postData } from "../schema/post/Post.Type";
 // Interface
-import { IDefaultResponse, IPostResponse } from "../model/types/IResponse.model";
+import { IDefaultResponse, IPostResponse, ILikePostResponse } from "../model/types/IResponse.model";
 import { IUserPayload, IPostPayload } from "../model/types/IPayload.model";
 
 class PostController {
@@ -40,8 +40,7 @@ class PostController {
         if (newPost) return ResponseUtil.postResponse(result, ResponseUtil.defaultResponse(true, CREATE_POST_SUCCESS));
         return ResponseUtil.postResponse(null, ResponseUtil.defaultResponse(true, CREATE_POST_FAIL))
     }
-    public async likePostController(postID: string, context: Context): Promise<IPostResponse> {
-        // const userInfo: IUserPayload = context.req.app.locals.userData;
+    public async likePostController(postID: string, context: Context): Promise<ILikePostResponse> {
         const clientDeviceID: string = SecureUtil.getUserClientId(context.req);
         // const userInfo = await redisClient.hgetall(clientDeviceID) as unknown as IUserPayload;
         const userInfo: IUserPayload = context.req.app.locals[clientDeviceID];
@@ -57,7 +56,8 @@ class PostController {
                     $pull: { listOfLike: user._id }
                 },
                 { new: true }
-            ).populate('owner', 'profileName email');
+            ).populate('owner', 'profileName email')
+             .populate('listOfLike', 'profileName email');
             isLike = false;
         } else {
             result = await PostModel.findOneAndUpdate(
@@ -67,14 +67,15 @@ class PostController {
                     $addToSet: { listOfLike: user._id }
                 },
                 { new: true }
-            ).populate('owner', 'profileName email');
+            ).populate('owner', 'profileName email')
+             .populate('listOfLike', 'profileName email');
             isLike = true;
         }
         if (result) {
-            if (isLike) return ResponseUtil.postResponse(result, ResponseUtil.defaultResponse(true, LIKE_POST_SUCCESS));
-            return ResponseUtil.postResponse(result, ResponseUtil.defaultResponse(true, UNLIKE_POST));
+            if (isLike) return ResponseUtil.likeResponse(result, isLike, ResponseUtil.defaultResponse(true, LIKE_POST_SUCCESS));
+            return ResponseUtil.likeResponse(result, isLike, ResponseUtil.defaultResponse(true, UNLIKE_POST));
         }
-        return ResponseUtil.postResponse(null, ResponseUtil.defaultResponse(true, LIKE_POST_FAIL));
+        return ResponseUtil.likeResponse(null, null, ResponseUtil.defaultResponse(true, LIKE_POST_FAIL));
     }
     public async getListOfLikesController(postID: string): Promise<User[]> {
         const _postID = mongo.ObjectId(postID);
@@ -82,7 +83,7 @@ class PostController {
         if (post) return post.listOfLike;
         return null;
     }
-    public async getAllPostController(limit = 5, cursor: string = null): Promise<IPostPayload[]> {
+    public async getAllPostController(limit: number, cursor: string = null): Promise<IPostPayload[]> {
         if (cursor) {
             const _cursorID = mongo.ObjectId(cursor);
             return await PostModel.find({ _id: { $lt: _cursorID } })
@@ -106,7 +107,16 @@ class PostController {
             .populate('listOfLike', 'profileName email')
             .populate({ path: 'listOfComment', populate: 'owner' });
     }
-    public async getPostByOwnerIdController(ownerID: string, limit = 5, cursor: string = null): Promise<IPostPayload[]> {
+    // new
+    public async getPostNumber(ownerID: string = null): Promise<Number>{
+        if(ownerID) {
+            const _ownerId = mongo.ObjectId(ownerID);
+            return  PostModel.countDocuments({ owner: _ownerId });
+        }
+        return PostModel.countDocuments();
+    }
+
+    public async getPostByOwnerIdController(ownerID: string, limit: number, cursor: string = null): Promise<IPostPayload[]> {
         const _ownerId = mongo.ObjectId(ownerID);
         if (cursor) {
             const _cursorID = mongo.ObjectId(cursor);
@@ -127,7 +137,6 @@ class PostController {
     public async deletePostController(id: string, context: Context): Promise<IDefaultResponse> {
         const _id = mongo.ObjectId(id);
         const clientDeviceID: string = SecureUtil.getUserClientId(context.req);
-        // const userInfo = await redisClient.hgetall(clientDeviceID) as unknown as IUserPayload;
         const userInfo: IUserPayload = context.req.app.locals[clientDeviceID];
         const postToDelete = await PostModel.findOne({ _id });
         if (!postToDelete) ResponseUtil.defaultResponse(false, POST_NOT_FOUND);
@@ -148,18 +157,22 @@ class PostController {
         // const userInfo = await redisClient.hgetall(clientDeviceID) as unknown as IUserPayload;
         const userInfo: IUserPayload = context.req.app.locals[clientDeviceID];
         const post = await PostModel.findOne({ _id: _postID });
+        
         if (!post) return ResponseUtil.postResponse(null, ResponseUtil.defaultResponse(false, POST_NOT_FOUND));
         if (post.owner.toString() !== userInfo._id.toString()) {
             return ResponseUtil.postResponse(null, ResponseUtil.defaultResponse(false, PERMISSION_ERROR));
         }
 
-        const result = await post.update(
+        const result: IPostPayload = await PostModel.findOneAndUpdate(
+            { _id: _postID },
             {
                 content: newPostContent,
                 createdAt: Date.now()
             },
             { new: true }
-        );
+        ).populate('owner', 'profileName email')
+         .populate('listOfLike', 'profileName email')
+         .populate({ path: 'listOfComment', populate: 'owner' });
         if (result) return ResponseUtil.postResponse(result, ResponseUtil.defaultResponse(false, UPDATE_POST_SUCCESS));
         return ResponseUtil.postResponse(null, ResponseUtil.defaultResponse(false, UPDATE_POST_FAIL));
     }

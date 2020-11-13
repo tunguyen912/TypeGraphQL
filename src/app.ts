@@ -10,6 +10,7 @@ require('./config/Redis.Config');
 
 
 const app = Express();
+require('events').EventEmitter.defaultMaxListeners = 100;
 
 dbConnection(process.env.DB_CONNECTION);
 const MongoStore = mongoConnect(ExpressSession);

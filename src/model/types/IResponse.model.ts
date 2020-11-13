@@ -16,6 +16,13 @@ export interface IPostResponse {
     response: IDefaultResponse
 }
 
+export interface ILikePostResponse {
+    data: IPostPayload,
+    isLike: boolean,
+    response: IDefaultResponse
+}
+
+
 export interface ICommentResponse {
     data: ICommentPayload,
     response: IDefaultResponse

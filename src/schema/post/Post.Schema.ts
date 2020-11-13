@@ -8,39 +8,48 @@ import { isAuthenticated } from "../../middlewares/isAuthenticatedMiddleware";
 import { Context } from "../../model/types/Context";
 import { IPostPayload } from "../../model/types/IPayload.model";
 import { CREATE_POST_TOPIC, UPDATE_POST_TOPIC } from "../../utils/constants/Post.Constants";
-import { paginationInput, postData, UpdatePostData } from "./Post.Type";
+import { GetPostListResponse, paginationInput, postData, UpdatePostData } from "./Post.Type";
 import { Post, DefaultResponse } from "../schema";
 
 
 @Resolver()
 export class PostResolver{
     // Query
-    @Query(() => [Post])
+    @Query(() => GetPostListResponse)
     async getAllPost(
-        @Arg('paginationInput', { nullable: true }) paginationInput: paginationInput
-    ): Promise<Post[]> {
-        if(paginationInput){
-            const { limit, cursor } = paginationInput;
-            return await PostController.getAllPostController(limit, cursor);
+        @Arg('paginationInput') paginationInput: paginationInput
+    ): Promise<GetPostListResponse> {
+        const { limit, cursor } = paginationInput;
+        if(cursor){
+            const data = await PostController.getAllPostController(limit, cursor);
+            const totalPost = await PostController.getPostNumber();
+            return { data, totalPost }
         }
-        return await PostController.getAllPostController();
+        const data = await PostController.getAllPostController(limit);
+        const totalPost = await PostController.getPostNumber();
+        return { data, totalPost }
     }
+
     @Query(() => Post)
     async getPostById(
         @Arg('postId') postId: string,
     ): Promise<Post> {
         return await PostController.getPostByIdController(postId);
     }
-    @Query(() => [Post])
+    @Query(() => GetPostListResponse)
     async getPostByOwnerId(
         @Arg('ownerId') ownerId: string,
-        @Arg('paginationInput', { nullable: true }) paginationInput: paginationInput
-    ): Promise<Post[]>{
-        if(paginationInput){
-            const { limit, cursor } = paginationInput;
-            return await PostController.getPostByOwnerIdController(ownerId, limit, cursor);
+        @Arg('paginationInput') paginationInput: paginationInput
+    ): Promise<GetPostListResponse>{
+        const { limit, cursor } = paginationInput;
+        if(cursor){
+            const data = await PostController.getPostByOwnerIdController(ownerId, limit, cursor);
+            const totalPost = await PostController.getPostNumber(ownerId);
+            return { data, totalPost } 
         }
-        return await PostController.getPostByOwnerIdController(ownerId);
+        const data = await PostController.getPostByOwnerIdController(ownerId, limit);
+        const totalPost = await PostController.getPostNumber(ownerId);
+        return { data, totalPost }     
     }
     // Mutation
     @UseMiddleware(isAuthenticated)

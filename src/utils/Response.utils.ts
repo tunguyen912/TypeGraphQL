@@ -1,5 +1,5 @@
 
-import { ICommentResponse, IDefaultResponse, ILoginResponse, IMessageResponse, IPostResponse } from '../model/types/IResponse.model';
+import { ICommentResponse, IDefaultResponse, ILoginResponse, IMessageResponse, IPostResponse, ILikePostResponse } from '../model/types/IResponse.model';
 import { IPostPayload, ICommentPayload, IMessagePayload } from '../model/types/IPayload.model';
 
 class ResponseUtil{
@@ -21,7 +21,14 @@ class ResponseUtil{
             data,
             response
         }
-    }    
+    }  
+    public likeResponse = (data: IPostPayload, isLike: boolean, response: IDefaultResponse): ILikePostResponse => {
+        return{
+            data,
+            isLike,
+            response
+        }
+    }  
     public commentResponse = (data: ICommentPayload, response: IDefaultResponse): ICommentResponse => {
         return {
             data,

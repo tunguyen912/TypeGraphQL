@@ -1,10 +1,10 @@
 import { Field, InputType, ObjectType } from "type-graphql";
-import { User } from '../schema';
+import { Post, User } from '../schema';
 // Input
 @InputType()
 export class paginationInput{
-    @Field({ nullable: true })
-    limit?: number;
+    @Field()
+    limit: number;
 
     @Field({ nullable: true })
     cursor?: string;
@@ -39,4 +39,16 @@ export class LikeSubResponse{
 
     @Field()
     likes: number;
+
+    @Field(() => [User])
+    listOfLike: User[];
+}
+
+@ObjectType()
+export class GetPostListResponse{
+    @Field(() => [Post])
+    data: Post[];
+
+    @Field({ nullable: true })
+    totalPost?: Number
 }

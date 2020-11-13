@@ -58,7 +58,6 @@ class UserController {
                 const clientDeviceID: string = SecureUtil.getUserClientId(context.req);
                 redisClient.hmset(clientDeviceID, '_id', result._id.toString(), 'email', result.email, 'firstName', result.firstName, 'lastName', result.lastName, 'token', jwt);
                 redisClient.expire(clientDeviceID, Number(process.env.REDIS_EXPIRE_TIME));
-                // Save userpayload into global var.
                 context.req.app.locals[clientDeviceID] = payload;
                 context.req.app.locals[clientDeviceID].token = jwt;
                 return ResponseUtil.logInResponse(true, LOG_IN_SUCCESS, jwt)

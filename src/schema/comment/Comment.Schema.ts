@@ -9,7 +9,7 @@ import { Context } from "../../model/types/Context";
 import { ICommentPayload, IPostPayload } from "../../model/types/IPayload.model";
 import { ADD_COMMENT_TOPIC, DELETE_COMMENT_TOPIC, UPDATE_COMMENT_TOPIC } from "../../utils/constants/Comment.Constants";
 import { CommentDataResponse, Post, DefaultResponse } from "../schema";
-import { commentData, DeleteCommentData, UpdateCommentData } from "./Comment.Type";
+import { commentData, CommentNotiResponse, DeleteCommentData, UpdateCommentData } from "./Comment.Type";
 
 @Resolver()
 export class CommentResolver{
@@ -24,12 +24,7 @@ export class CommentResolver{
     ): Promise<DefaultResponse> {
         const { data, response } =  await CommentController.addCommentController(commentData, context);
         if(data){
-            const payload: ICommentPayload = {
-                _id: data._id,
-                content: data.content,
-                owner: data.owner,
-                createdAt: data.createdAt
-            }
+            const payload: ICommentPayload = data
             pubSub.publish(ADD_COMMENT_TOPIC, payload);
         }
         return response;
@@ -46,16 +41,7 @@ export class CommentResolver{
         const { commentID, postID } = deleteCommentData;
         const { data, response } = await CommentController.deleteCommentController(commentID, postID, context);
         if(data){
-            const payload: IPostPayload = {
-                _id: data._id,
-                owner: data.owner,
-                content: data.content,
-                likes: data.likes,
-                listOfLike: data.listOfLike,
-                createdAt: data.createdAt,
-                comments: data.comments, 
-                listOfComment: data.listOfComment
-            }
+            const payload: IPostPayload = data;
             pubSub.publish(DELETE_COMMENT_TOPIC, payload);
         }
         return response;
@@ -69,15 +55,10 @@ export class CommentResolver{
         @Ctx() context: Context,
         @PubSub() pubSub: PubSubEngine,
     ): Promise<DefaultResponse> {
-        const { commentID, newCommentContent } = updateCommentData;
-        const { data, response } = await CommentController.updateCommentController(commentID, newCommentContent, context);
+        const { commentID, newCommentContent, postID } = updateCommentData;
+        const { data, response } = await CommentController.updateCommentController(commentID, postID, newCommentContent, context);
         if(data){
-            const payload: ICommentPayload = {
-                _id: data._id,
-                content: data.content,
-                owner: data.owner,
-                createdAt: data.createdAt
-            }
+            const payload: ICommentPayload = data;
             pubSub.publish(UPDATE_COMMENT_TOPIC, payload);
         }
         return response;
@@ -88,6 +69,19 @@ export class CommentResolver{
         @Root() payload: ICommentPayload,
     ): CommentDataResponse{
         return payload;
+    }
+
+    @Subscription(() => CommentNotiResponse, {
+        topics: ADD_COMMENT_TOPIC,
+        filter: ({ payload, args }) => {
+            return payload.toPost.owner.email === args.owner
+        }
+    })
+    commentNotiSub(
+        @Root() payload,
+        @Arg('owner') owner: string
+    ): CommentNotiResponse{
+        return { userComment: payload.owner, postID: payload.toPost._id };
     }
 
     @Subscription(() => Post, { topics: DELETE_COMMENT_TOPIC })
