@@ -1,5 +1,4 @@
 import { mongo } from 'mongoose';
-// import redisClient from '../config/Redis.Config';
 // Utils
 import ResponseUtil from "../utils/Response.utils";
 import SecureUtil from '../utils/Secure.utils';
@@ -21,11 +20,64 @@ import { IDefaultResponse, IPostResponse, ILikePostResponse } from "../model/typ
 import { IUserPayload, IPostPayload } from "../model/types/IPayload.model";
 
 class PostController {
+    public async getListOfLikesController(postID: string): Promise<User[]> {
+        const _postID = mongo.ObjectId(postID);
+        const post: IPostPayload = await PostModel.findOne({ _id: _postID }).populate('listOfLike');
+        if (post) return post.listOfLike;
+        return null;
+    }
+    public async getAllPostController(limit: number, cursor: string = null): Promise<IPostPayload[]> {
+        if (cursor) {
+            const _cursorID = mongo.ObjectId(cursor);
+            return await PostModel.find({ _id: { $lt: _cursorID } })
+                .sort({ _id: 'desc' })
+                .limit(limit)
+                .populate('owner', 'profileName email')
+                .populate('listOfLike', 'profileName email')
+                .populate({ path: 'listOfComment', populate: 'owner' });
+        }
+        return await PostModel.find({})
+            .sort({ _id: 'desc' })
+            .limit(limit)
+            .populate('owner', 'profileName email')
+            .populate('listOfLike', 'profileName email')
+            .populate({ path: 'listOfComment', populate: 'owner' });
+    }
+    public async getPostByIdController(id: string): Promise<IPostPayload> {
+        const _postId = mongo.ObjectId(id);
+        return await PostModel.findOne({ _id: _postId })
+            .populate('owner', 'profileName email')
+            .populate('listOfLike', 'profileName email')
+            .populate({ path: 'listOfComment', populate: 'owner' });
+    }
+    public async getNumberOfPostController(ownerID: string = null): Promise<Number>{
+        if(ownerID) {
+            const _ownerId = mongo.ObjectId(ownerID);
+            return  PostModel.countDocuments({ owner: _ownerId });
+        }
+        return PostModel.countDocuments();
+    }
+    public async getPostByOwnerIdController(ownerID: string, limit: number, cursor: string = null): Promise<IPostPayload[]> {
+        const _ownerId = mongo.ObjectId(ownerID);
+        if (cursor) {
+            const _cursorID = mongo.ObjectId(cursor);
+            return await PostModel.find({ owner: _ownerId, _id: { $lt: _cursorID } })
+                .sort({ _id: 'desc' })
+                .limit(limit)
+                .populate('owner', 'profileName email')
+                .populate('listOfLike', 'profileName email')
+                .populate({ path: 'listOfComment', populate: 'owner' });
+        }
+        return await PostModel.find({ owner: _ownerId })
+            .sort({ _id: 'desc' })
+            .limit(limit)
+            .populate('owner', 'profileName email')
+            .populate('listOfLike', 'profileName email')
+            .populate({ path: 'listOfComment', populate: 'owner' });
+    }
     public async createPostController(postData: postData, context: Context): Promise<IPostResponse> {
         const { postContent } = postData;
-        // const userInfo: IUserPayload = context.req.app.locals.userData;
         const clientDeviceID: string = SecureUtil.getUserClientId(context.req);
-        // const userInfo = await redisClient.hgetall(clientDeviceID) as unknown as IUserPayload;
         const userInfo: IUserPayload = context.req.app.locals[clientDeviceID];
         const newPostInfo = new PostModel({
             owner: await UserModel.findOne({ email: userInfo.email }),
@@ -42,7 +94,6 @@ class PostController {
     }
     public async likePostController(postID: string, context: Context): Promise<ILikePostResponse> {
         const clientDeviceID: string = SecureUtil.getUserClientId(context.req);
-        // const userInfo = await redisClient.hgetall(clientDeviceID) as unknown as IUserPayload;
         const userInfo: IUserPayload = context.req.app.locals[clientDeviceID];
         const _postID = mongo.ObjectId(postID);
         const post: IPostPayload = await PostModel.findOne({ _id: _postID });
@@ -77,84 +128,9 @@ class PostController {
         }
         return ResponseUtil.likeResponse(null, null, ResponseUtil.defaultResponse(true, LIKE_POST_FAIL));
     }
-    public async getListOfLikesController(postID: string): Promise<User[]> {
-        const _postID = mongo.ObjectId(postID);
-        const post: IPostPayload = await PostModel.findOne({ _id: _postID }).populate('listOfLike');
-        if (post) return post.listOfLike;
-        return null;
-    }
-    public async getAllPostController(limit: number, cursor: string = null): Promise<IPostPayload[]> {
-        if (cursor) {
-            const _cursorID = mongo.ObjectId(cursor);
-            return await PostModel.find({ _id: { $lt: _cursorID } })
-                .sort({ _id: 'desc' })
-                .limit(limit)
-                .populate('owner', 'profileName email')
-                .populate('listOfLike', 'profileName email')
-                .populate({ path: 'listOfComment', populate: 'owner' });
-        }
-        return await PostModel.find({})
-            .sort({ _id: 'desc' })
-            .limit(limit)
-            .populate('owner', 'profileName email')
-            .populate('listOfLike', 'profileName email')
-            .populate({ path: 'listOfComment', populate: 'owner' });
-    }
-    public async getPostByIdController(id: string): Promise<IPostPayload> {
-        const _postId = mongo.ObjectId(id);
-        return await PostModel.findOne({ _id: _postId })
-            .populate('owner', 'profileName email')
-            .populate('listOfLike', 'profileName email')
-            .populate({ path: 'listOfComment', populate: 'owner' });
-    }
-    // new
-    public async getPostNumber(ownerID: string = null): Promise<Number>{
-        if(ownerID) {
-            const _ownerId = mongo.ObjectId(ownerID);
-            return  PostModel.countDocuments({ owner: _ownerId });
-        }
-        return PostModel.countDocuments();
-    }
-
-    public async getPostByOwnerIdController(ownerID: string, limit: number, cursor: string = null): Promise<IPostPayload[]> {
-        const _ownerId = mongo.ObjectId(ownerID);
-        if (cursor) {
-            const _cursorID = mongo.ObjectId(cursor);
-            return await PostModel.find({ owner: _ownerId, _id: { $lt: _cursorID } })
-                .sort({ _id: 'desc' })
-                .limit(limit)
-                .populate('owner', 'profileName email')
-                .populate('listOfLike', 'profileName email')
-                .populate({ path: 'listOfComment', populate: 'owner' });
-        }
-        return await PostModel.find({ owner: _ownerId })
-            .sort({ _id: 'desc' })
-            .limit(limit)
-            .populate('owner', 'profileName email')
-            .populate('listOfLike', 'profileName email')
-            .populate({ path: 'listOfComment', populate: 'owner' });
-    }
-    public async deletePostController(id: string, context: Context): Promise<IDefaultResponse> {
-        const _id = mongo.ObjectId(id);
-        const clientDeviceID: string = SecureUtil.getUserClientId(context.req);
-        const userInfo: IUserPayload = context.req.app.locals[clientDeviceID];
-        const postToDelete = await PostModel.findOne({ _id });
-        if (!postToDelete) ResponseUtil.defaultResponse(false, POST_NOT_FOUND);
-        if (postToDelete.owner.toString() !== userInfo._id.toString()) {
-            return ResponseUtil.defaultResponse(false, PERMISSION_ERROR);
-        }
-        const deletePost = await postToDelete.delete();
-        const listOfComment = postToDelete.listOfComment;
-        const deleteComment = await CommentModel.deleteMany({
-            _id: { $in: listOfComment }
-        });
-        if (deleteComment && deletePost) return ResponseUtil.defaultResponse(true, DELETE_POST_SUCCESS);
-        return ResponseUtil.defaultResponse(false, DELETE_POST_FAIL);
-    }
     public async updatePostController(postID: string, newPostContent: string, context: Context): Promise<IPostResponse> {
         const _postID = mongo.ObjectId(postID);
         const clientDeviceID: string = SecureUtil.getUserClientId(context.req);
-        // const userInfo = await redisClient.hgetall(clientDeviceID) as unknown as IUserPayload;
         const userInfo: IUserPayload = context.req.app.locals[clientDeviceID];
         const post = await PostModel.findOne({ _id: _postID });
         
@@ -173,9 +149,25 @@ class PostController {
         ).populate('owner', 'profileName email')
          .populate('listOfLike', 'profileName email')
          .populate({ path: 'listOfComment', populate: 'owner' });
-        if (result) return ResponseUtil.postResponse(result, ResponseUtil.defaultResponse(false, UPDATE_POST_SUCCESS));
+        if (result) return ResponseUtil.postResponse(result, ResponseUtil.defaultResponse(true, UPDATE_POST_SUCCESS));
         return ResponseUtil.postResponse(null, ResponseUtil.defaultResponse(false, UPDATE_POST_FAIL));
     }
-
+    public async deletePostController(id: string, context: Context): Promise<IDefaultResponse> {
+        const _id = mongo.ObjectId(id);
+        const clientDeviceID: string = SecureUtil.getUserClientId(context.req);
+        const userInfo: IUserPayload = context.req.app.locals[clientDeviceID];
+        const postToDelete = await PostModel.findOne({ _id });
+        if (!postToDelete) ResponseUtil.defaultResponse(false, POST_NOT_FOUND);
+        if (postToDelete.owner.toString() !== userInfo._id.toString()) {
+            return ResponseUtil.defaultResponse(false, PERMISSION_ERROR);
+        }
+        const deletePost = await postToDelete.delete();
+        const listOfComment = postToDelete.listOfComment;
+        const deleteComment = await CommentModel.deleteMany({
+            _id: { $in: listOfComment }
+        });
+        if (deleteComment && deletePost) return ResponseUtil.defaultResponse(true, DELETE_POST_SUCCESS);
+        return ResponseUtil.defaultResponse(false, DELETE_POST_FAIL);
+    }
 }
 export default new PostController();

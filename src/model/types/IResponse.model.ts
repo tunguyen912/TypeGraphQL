@@ -22,7 +22,6 @@ export interface ILikePostResponse {
     response: IDefaultResponse
 }
 
-
 export interface ICommentResponse {
     data: ICommentPayload,
     response: IDefaultResponse

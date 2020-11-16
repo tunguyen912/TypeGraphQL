@@ -35,14 +35,7 @@ export class MessageResolver{
     ): Promise<DefaultResponse> {
         const { data, response } =  await MessageController.createMessageController(messageData, context);
         if(data){
-            const payload: IMessagePayload = {
-                _id: data._id,
-                messageFrom: data.messageFrom,
-                messageTo: data.messageTo,
-                messageContent: data.messageContent,
-                conversationID: data.conversationID,
-                createdAt: data.createdAt,
-            }
+            const payload: IMessagePayload = data;
             pubSub.publish(NEW_MESSAGE_TOPIC, payload);
         }
         return response;
@@ -50,7 +43,7 @@ export class MessageResolver{
     // Subscription
     @Subscription(() => Message, {
         topics: NEW_MESSAGE_TOPIC,
-        filter: ({payload, args}) => {
+        filter: ({ payload, args }) => {
             return payload.messageTo.email === args.toUser
         }
     })

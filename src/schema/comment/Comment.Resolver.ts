@@ -1,6 +1,7 @@
 import { Arg, Ctx, Mutation, PubSubEngine, Resolver, UseMiddleware, PubSub, Subscription, Root } from "type-graphql";
 // Controllers
 import CommentController from "../../controllers/Comment.Controller";
+import PostController from "../../controllers/Post.Controller";
 // Middlewares
 import { authorizationMiddleware } from "../../middlewares/authorizationMiddleware";
 import { isAuthenticated } from "../../middlewares/isAuthenticatedMiddleware";
@@ -22,9 +23,10 @@ export class CommentResolver{
         @Ctx() context: Context,
         @PubSub() pubSub: PubSubEngine
     ): Promise<DefaultResponse> {
-        const { data, response } =  await CommentController.addCommentController(commentData, context);
+        const { data, response } = await CommentController.addCommentController(commentData, context);
         if(data){
-            const payload: ICommentPayload = data
+            const payload = data;
+            payload.toPost = await PostController.getPostByIdController(data.toPostId);
             pubSub.publish(ADD_COMMENT_TOPIC, payload);
         }
         return response;
@@ -41,8 +43,7 @@ export class CommentResolver{
         const { commentID, postID } = deleteCommentData;
         const { data, response } = await CommentController.deleteCommentController(commentID, postID, context);
         if(data){
-            const payload: IPostPayload = data;
-            pubSub.publish(DELETE_COMMENT_TOPIC, payload);
+            pubSub.publish(DELETE_COMMENT_TOPIC, data);
         }
         return response;
     }
@@ -58,8 +59,7 @@ export class CommentResolver{
         const { commentID, newCommentContent, postID } = updateCommentData;
         const { data, response } = await CommentController.updateCommentController(commentID, postID, newCommentContent, context);
         if(data){
-            const payload: ICommentPayload = data;
-            pubSub.publish(UPDATE_COMMENT_TOPIC, payload);
+            pubSub.publish(UPDATE_COMMENT_TOPIC, data);
         }
         return response;
     }
@@ -74,14 +74,14 @@ export class CommentResolver{
     @Subscription(() => CommentNotiResponse, {
         topics: ADD_COMMENT_TOPIC,
         filter: ({ payload, args }) => {
-            return payload.toPost.owner.email === args.owner
+            return payload.toPost.owner.email === args.owner;
         }
     })
     commentNotiSub(
         @Root() payload,
         @Arg('owner') owner: string
     ): CommentNotiResponse{
-        return { userComment: payload.owner, postID: payload.toPost._id };
+        return { userComment: payload.owner, postID: payload.toPostId };
     }
 
     @Subscription(() => Post, { topics: DELETE_COMMENT_TOPIC })

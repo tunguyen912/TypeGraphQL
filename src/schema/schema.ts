@@ -1,22 +1,22 @@
 import { buildSchemaSync, Field, ObjectType } from "type-graphql";
 import { PubSub } from 'apollo-server-express';
 
-import { UserResolver } from './user/User.Schema';
-import { PostResolver } from "./post/Post.Schema";
-import { LikeResolver } from "./post/LikePost.Schema";
-import { MessageResolver } from "./message/Message.Schema";
-import { CommentResolver } from "./comment/Comment.Schema";
+import { UserResolver } from './user/User.Resolver';
+import { PostResolver } from "./post/Post.Resolver";
+import { LikeResolver } from "./post/LikePost.Resolver";
+import { MessageResolver } from "./message/Message.Resolver";
+import { CommentResolver } from "./comment/Comment.Resolver";
 
 @ObjectType()
 export class User{
     @Field({ nullable: true })
     _id?: string
 
-    @Field({ nullable: true })
-    profileName?: string;
+    @Field()
+    profileName: string;
 
-    @Field({ nullable: true })
-    email?: string
+    @Field()
+    email: string
 }
 
 @ObjectType()

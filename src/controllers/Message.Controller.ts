@@ -28,7 +28,6 @@ class MessageController{
     public async createMessageController(messageData: messageData, context: Context): Promise<IMessageResponse>{
         const { toUser, messageContent } = messageData;
         const clientDeviceID: string = SecureUtil.getUserClientId(context.req);
-        // const userInfo = await redisClient.hgetall(clientDeviceID) as unknown as IUserPayload;
         const userInfo: IUserPayload = context.req.app.locals[clientDeviceID];
         const from: IUserPayload = await UserModel.findOne({ email: userInfo.email });
         const to: IUserPayload = await UserModel.findOne({ email: toUser });
@@ -45,7 +44,6 @@ class MessageController{
     }
     public async getConversationController(context: Context, withUser: string): Promise<IMessagePayload[]>{
         const clientDeviceID: string = SecureUtil.getUserClientId(context.req);
-        // const userInfo = await redisClient.hgetall(clientDeviceID) as unknown as IUserPayload;
         const userInfo: IUserPayload = context.req.app.locals[clientDeviceID];
         const user2: IUserPayload = await UserModel.findOne({ email: withUser });
         const conversationID: string = await this.getConversationIdHelper(userInfo._id, user2._id);

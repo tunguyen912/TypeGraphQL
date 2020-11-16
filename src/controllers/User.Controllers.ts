@@ -6,7 +6,7 @@ import SecureUtil from '../utils/Secure.utils'
 // Constants
 import {
     SIGN_UP_ERROR, DUPLICATE_ERROR, INCORRECT_EMAIL_OR_PASSWORD, LOG_IN_SUCCESS, INVALID_EMAIL_TYPE,
-    REGISTER_SUCCESS, LOG_OUT_SUCCESS, INVALID_USER, INVALID_PASSWORD
+    REGISTER_SUCCESS, LOG_OUT_SUCCESS, INVALID_PASSWORD
 } from '../utils/constants/User.Constants';
 // Model
 import { Context } from "../model/types/Context";
@@ -67,10 +67,10 @@ class UserController {
     }
     public async logOutController(context: Context): Promise<IDefaultResponse> {
         const clientDeviceID: string = SecureUtil.getUserClientId(context.req);
-        const result = await redisClient.hdel(clientDeviceID, '_id', 'email', 'firstName', 'lastName', 'token');
+        await redisClient.hdel(clientDeviceID, '_id', 'email', 'firstName', 'lastName', 'token');
         delete context.req.app.locals[clientDeviceID];
-        if (result) return ResponseUtil.defaultResponse(true, LOG_OUT_SUCCESS);
-        return ResponseUtil.defaultResponse(false, INVALID_USER);
+        return ResponseUtil.defaultResponse(true, LOG_OUT_SUCCESS);
+        
     }
     public async findUserController(email: string): Promise<User> {
         return await UserModel.findOne({ email });
@@ -81,7 +81,6 @@ class UserController {
     }
     public async findMeController(context: Context): Promise<User> {
         const clientDeviceID: string = SecureUtil.getUserClientId(context.req);
-        // const userInfo = await redisClient.hgetall(clientDeviceID) as unknown as IUserPayload;
         const userInfo: IUserPayload = context.req.app.locals[clientDeviceID];
         return await this.findUserController(userInfo.email);
     }

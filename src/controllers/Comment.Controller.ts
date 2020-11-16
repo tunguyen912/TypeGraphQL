@@ -1,5 +1,4 @@
 import { mongo } from 'mongoose';
-// import redisClient from '../config/Redis.Config';
 // Schema
 import { commentData } from "../schema/comment/Comment.Type";
 // Utils
@@ -8,6 +7,7 @@ import SecureUtil from '../utils/Secure.utils';
 // Model
 import { Context } from "../model/types/Context";
 import { PostModel } from "../model/Post.Model";
+import { UserModel } from '../model/User.Model';
 import { CommentModel } from "../model/Comment.Model";
 // Constants
 import { ADD_COMMENT_SUCCESS, DELETE_COMMENT_SUCCESS, DELETE_COMMENT_FAIL, UPDATE_COMMENT_SUCCESS, UPDATE_COMMENT_FAIL, COMMENT_NOT_FOUND, ADD_COMMENT_FAIL } from "../utils/constants/Comment.Constants";
@@ -15,7 +15,6 @@ import { ERROR, PERMISSION_ERROR } from "../utils/constants/Error.Constants";
 // Interfaces
 import { IUserPayload, IPostPayload, ICommentPayload } from "../model/types/IPayload.model";
 import { ICommentResponse, IPostResponse } from "../model/types/IResponse.model";
-import { UserModel } from '../model/User.Model';
 
 class CommentController{
     private async createCommentHelper(commentContent: String, context: Context): Promise<ICommentPayload>{
@@ -66,10 +65,16 @@ class CommentController{
     }
     public async addCommentController(commentData: commentData, context: Context): Promise<ICommentResponse>{
         const { postID, commentContent } = commentData;
-        const comment = await this.createCommentHelper(commentContent, context);
+        const comment: ICommentPayload = await this.createCommentHelper(commentContent, context);
         const updatedPost: IPostPayload = await this.addCommentToPostHelper(postID, comment);
-        comment.toPostId = updatedPost._id;
-        if(updatedPost && comment) return ResponseUtil.commentResponse(comment, ResponseUtil.defaultResponse(true, ADD_COMMENT_SUCCESS));
+        const result: ICommentPayload = {
+            _id: comment._id,
+            owner: comment.owner,
+            content: comment.content,
+            createdAt: comment.createdAt,
+            toPostId: updatedPost._id
+        };
+        if(updatedPost && comment) return ResponseUtil.commentResponse(result, ResponseUtil.defaultResponse(true, ADD_COMMENT_SUCCESS));
         return ResponseUtil.commentResponse(null, ResponseUtil.defaultResponse(false, ADD_COMMENT_FAIL))
     }
     public async deleteCommentController(commentID: string, postID: string, context: Context): Promise<IPostResponse> {

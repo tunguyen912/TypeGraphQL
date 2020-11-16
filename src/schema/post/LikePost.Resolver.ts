@@ -22,8 +22,9 @@ export class LikeResolver{
     async getListOfLikes(
         @Arg('postID') postID: string,
     ): Promise<User[]> {
-        const result = await PostController.getListOfLikesController(postID);
-        return result as unknown as Array<User>;
+        const result: User[] = await PostController.getListOfLikesController(postID);
+        // return result as unknown as Array<User>;
+        return result;
     }
     // Mutation
     @UseMiddleware(isAuthenticated)
@@ -47,7 +48,7 @@ export class LikeResolver{
                 owner,
                 listOfLike: data.listOfLike,
             }
-            pubSub.publish(LIKE_POST_TOPIC, {data: payload, isLike} );
+            pubSub.publish(LIKE_POST_TOPIC, { data: payload, isLike });
         }
         return response;
     }

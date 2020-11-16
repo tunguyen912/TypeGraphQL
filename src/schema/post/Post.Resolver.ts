@@ -22,11 +22,11 @@ export class PostResolver{
         const { limit, cursor } = paginationInput;
         if(cursor){
             const data = await PostController.getAllPostController(limit, cursor);
-            const totalPost = await PostController.getPostNumber();
+            const totalPost = await PostController.getNumberOfPostController();
             return { data, totalPost }
         }
         const data = await PostController.getAllPostController(limit);
-        const totalPost = await PostController.getPostNumber();
+        const totalPost = await PostController.getNumberOfPostController();
         return { data, totalPost }
     }
 
@@ -44,11 +44,11 @@ export class PostResolver{
         const { limit, cursor } = paginationInput;
         if(cursor){
             const data = await PostController.getPostByOwnerIdController(ownerId, limit, cursor);
-            const totalPost = await PostController.getPostNumber(ownerId);
+            const totalPost = await PostController.getNumberOfPostController(ownerId);
             return { data, totalPost } 
         }
         const data = await PostController.getPostByOwnerIdController(ownerId, limit);
-        const totalPost = await PostController.getPostNumber(ownerId);
+        const totalPost = await PostController.getNumberOfPostController(ownerId);
         return { data, totalPost }     
     }
     // Mutation
@@ -62,17 +62,7 @@ export class PostResolver{
     ): Promise<DefaultResponse> {
         const { data, response } = await PostController.createPostController(postData, context);
         if(data){
-            const payload: IPostPayload = {
-                _id: data._id,
-                owner: data.owner,
-                content: data.content,
-                likes: data.likes,
-                listOfLike: data.listOfLike,
-                createdAt: data.createdAt,
-                comments: data.comments, 
-                listOfComment: data.listOfComment,
-            }
-            pubSub.publish(CREATE_POST_TOPIC, payload);
+            pubSub.publish(CREATE_POST_TOPIC, data);
         }
         return response;
     }
@@ -96,17 +86,7 @@ export class PostResolver{
         const { postID, newPostContent } = updatePostData;
         const { data, response } = await PostController.updatePostController(postID, newPostContent, context);
         if(data){
-            const payload: IPostPayload = {
-                _id: data._id,
-                owner: data.owner,
-                content: data.content,
-                likes: data.likes,
-                listOfLike: data.listOfLike,
-                createdAt: data.createdAt,
-                comments: data.comments, 
-                listOfComment: data.listOfComment,
-            }
-            pubSub.publish(UPDATE_POST_TOPIC,  payload);
+            pubSub.publish(UPDATE_POST_TOPIC, data);
         }
         return response;
     }

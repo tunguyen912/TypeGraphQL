@@ -1,3 +1,4 @@
+import { Post } from "../../schema/schema";
 import { User } from "../User.Model";
 
 export interface IUserPayload {
@@ -42,4 +43,5 @@ export interface ICommentPayload {
     content: string;
     createdAt: Date;
     toPostId?: string;
+    toPost?: Post;
 }
