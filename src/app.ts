@@ -10,6 +10,7 @@ require('./config/Redis.Config');
 
 
 const app = Express();
+require('events').EventEmitter.defaultMaxListeners = 100;
 
 dbConnection(process.env.DB_CONNECTION);
 const MongoStore = mongoConnect(ExpressSession);
@@ -21,7 +22,7 @@ const connectSession = ExpressSession({
   cookie: {
     maxAge: 60 * 60 * 1000,
     secure: false,
-    sameSite: "none"
+    // sameSite: "none"
   }
 })
 app.use(cors({

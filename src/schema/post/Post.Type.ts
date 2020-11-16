@@ -1,9 +1,10 @@
 import { Field, InputType, ObjectType } from "type-graphql";
+import { Post } from "../schema";
 // Input
 @InputType()
 export class paginationInput{
-    @Field({ nullable: true })
-    limit?: number;
+    @Field()
+    limit: number;
 
     @Field({ nullable: true })
     cursor?: string;
@@ -47,4 +48,13 @@ export class UpdatePostResponse{
 
     @Field({nullable: true})
     newPostContent?: string;
+}
+
+@ObjectType()
+export class GetPostListResponse{
+    @Field(() => [Post])
+    data: Post[];
+
+    @Field({ nullable: true })
+    totalPost?: Number
 }

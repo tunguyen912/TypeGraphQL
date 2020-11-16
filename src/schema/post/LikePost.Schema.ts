@@ -36,6 +36,9 @@ class LikeSubResponse{
 
     @Field()
     likes: number;
+
+    @Field(() => [User])
+    listOfLike: User[];
 }
 
 @Resolver()
@@ -67,7 +70,8 @@ export class LikeResolver{
             userLike,
             _id: data._id,
             likes: data.likes,
-            owner
+            owner,
+            listOfLike: data.listOfLike,
         }
         pubSub.publish(LIKE_POST_TOPIC, payload );
         return response;

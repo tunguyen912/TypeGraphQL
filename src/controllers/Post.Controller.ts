@@ -50,7 +50,8 @@ export const likePostController = async (postID: string, context: Context): Prom
                 $pull: { listOfLike: user._id }
             },
             { new: true }
-        ).populate('owner', 'profileName email');
+        ).populate('owner', 'profileName email')
+         .populate('listOfLike', 'profileName email');
         isLike = false;
     } else {
         result = await PostModel.findOneAndUpdate(
@@ -60,7 +61,8 @@ export const likePostController = async (postID: string, context: Context): Prom
                 $addToSet: { listOfLike: user._id }
             },
             { new: true }
-        ).populate('owner', 'profileName email');
+        ).populate('owner', 'profileName email')
+         .populate('listOfLike', 'profileName email');
         isLike = true;
     }
     if (result) {
@@ -77,7 +79,8 @@ export const getListOfLikesController = async (postID: string): Promise<User[]> 
     return null;
 }
 
-export const getAllPostController = async (limit = 5, cursor: string = null): Promise<IPostPayload[]> => {
+export const getAllPostController = async (limit: number, cursor: string = null): Promise<IPostPayload[]> => {
+    // console.log(await PostModel.countDocuments());
     if(cursor){
         const _cursorID = mongo.ObjectId(cursor);
         return await PostModel.find({_id: { $lt: _cursorID }})
@@ -88,8 +91,8 @@ export const getAllPostController = async (limit = 5, cursor: string = null): Pr
             .populate({ path: 'listOfComment', populate: 'owner' });
     }
     return await PostModel.find({})
-        .sort({_id: 'desc'})
         .limit(limit)
+        .sort({_id: 'desc'})
         .populate('owner', 'profileName email')
         .populate('listOfLike', 'profileName email')
         .populate({ path: 'listOfComment', populate: 'owner' });
@@ -103,7 +106,15 @@ export const getPostByIdController = async(id: string): Promise<IPostPayload> =>
         .populate({ path: 'listOfComment', populate: 'owner' });
 }
 
-export const getPostByOwnerIdController = async (ownerID: string, limit = 5, cursor: string = null): Promise<IPostPayload[]> => {
+export const getPostNumber = async(ownerID: string = null): Promise<Number> => {
+    if(ownerID) {
+        const _ownerId = mongo.ObjectId(ownerID);
+        return  PostModel.countDocuments({ owner: _ownerId });
+    }
+    return PostModel.countDocuments();
+}
+
+export const getPostByOwnerIdController = async (ownerID: string, limit: number, cursor: string = null): Promise<IPostPayload[]> => {
     const _ownerId = mongo.ObjectId(ownerID);
     if(cursor){
         const _cursorID = mongo.ObjectId(cursor);
@@ -151,13 +162,16 @@ export const updatePostController = async (postID: string, newPostContent: strin
         return ResponseUtil.postResponse(null, ResponseUtil.defaultResponse(false, PERMISSION_ERROR));
     }
 
-    const result = await post.update(
+    const result: IPostPayload = await PostModel.findOneAndUpdate(
+        { _id: _postID },
         { 
             content: newPostContent, 
             createdAt: Date.now()
         }, 
         { new: true }
-    );
-    if(result) return ResponseUtil.postResponse(result, ResponseUtil.defaultResponse(false, UPDATE_POST_SUCCESS));
+    ).populate('owner', 'profileName email')
+     .populate('listOfLike', 'profileName email')
+     .populate({ path: 'listOfComment', populate: 'owner' });
+    if(result) return ResponseUtil.postResponse(result, ResponseUtil.defaultResponse(true, UPDATE_POST_SUCCESS));
     return ResponseUtil.postResponse(null, ResponseUtil.defaultResponse(false, UPDATE_POST_FAIL));
 }

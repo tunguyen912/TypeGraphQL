@@ -1,4 +1,4 @@
-import { Arg, Ctx, Field, InputType, Mutation, ObjectType, PubSubEngine, Resolver, UseMiddleware, PubSub, Subscription, Root } from "type-graphql";
+import { Arg, Ctx, Mutation, PubSubEngine, Resolver, UseMiddleware, PubSub, Subscription, Root } from "type-graphql";
 // Controllers
 import { addCommentController, deleteCommentController, updateCommentController } from "../../controllers/Comment.Controller";
 // Middlewares
@@ -25,12 +25,7 @@ export class CommentResolver{
         const { data, response } =  await addCommentController(commentData, context);
         // const owner = await findUserByIdController(updatedPost.owner);
         if(data){
-            const payload: ICommentPayload = {
-                _id: data._id,
-                content: data.content,
-                owner: data.owner,
-                createdAt: data.createdAt
-            }
+            const payload: ICommentPayload = data;
             pubSub.publish(ADD_COMMENT_TOPIC, payload);
         }
         return response;
@@ -48,16 +43,8 @@ export class CommentResolver{
         const { data, response } = await deleteCommentController(commentID, postID, context);
         
         if(data){
-            const payload: IPostPayload = {
-                _id: data._id,
-                owner: data.owner,
-                content: data.content,
-                likes: data.likes,
-                listOfLike: data.listOfLike,
-                createdAt: data.createdAt,
-                comments: data.comments, 
-                listOfComment: data.listOfComment
-            }
+            // moi sua
+            const payload: IPostPayload = data;
             pubSub.publish(DELETE_COMMENT_TOPIC, payload);
         }
         return response;
@@ -71,15 +58,10 @@ export class CommentResolver{
         @Ctx() context: Context,
         @PubSub() pubSub: PubSubEngine,
     ): Promise<CommentResponse> {
-        const { commentID, newCommentContent } = updateCommentData;
-        const { data, response } = await updateCommentController(commentID, newCommentContent, context);
+        const { commentID, newCommentContent, postID } = updateCommentData;
+        const { data, response } = await updateCommentController(commentID, postID, newCommentContent, context);
         if(data){
-            const payload: ICommentPayload = {
-                _id: data._id,
-                content: data.content,
-                owner: data.owner,
-                createdAt: data.createdAt
-            }
+            const payload: ICommentPayload = data
             pubSub.publish(UPDATE_COMMENT_TOPIC, payload);
         }
         return response;

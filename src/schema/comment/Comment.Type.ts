@@ -24,6 +24,9 @@ export class UpdateCommentData{
     commentID: string;
 
     @Field()
+    postID: string;
+
+    @Field()
     newCommentContent: string;
 }
 // Data

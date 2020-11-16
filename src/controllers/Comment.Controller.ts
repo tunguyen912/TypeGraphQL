@@ -26,11 +26,11 @@ const createCommentHelper = async (commentContent: String, context: Context): Pr
         content: commentContent
     });
     const result: ICommentPayload = await commentInfo.save();
-    if(result) return result;
+    if (result) return result;
     throw new Error(ERROR);
 }
 
-const addCommentToPostHelper = async (postID: String, comment: ICommentPayload): Promise<Post> => {
+const addCommentToPostHelper = async (postID: String, comment: ICommentPayload): Promise<IPostPayload> => {
     const _postID = mongo.ObjectId(postID);
     const result: IPostPayload = await PostModel.findOneAndUpdate(
         { _id: _postID },
@@ -40,35 +40,38 @@ const addCommentToPostHelper = async (postID: String, comment: ICommentPayload):
         },
         { new: true }
     );
-    if(result) return result;
+    if (result) return result;
 }
 
-export const updateCommentController = async (id: string, content: string, context: Context): Promise<ICommentResponse> => {
-    const _commentID = mongo.ObjectId(id);
+export const updateCommentController = async (commentID: string, postID: string, content: string, context: Context): Promise<ICommentResponse> => {
+    const _commentID = mongo.ObjectId(commentID);
     const clientDeviceID: string = SecureUtil.getUserClientId(context.req);
     const userInfo = await redisClient.hgetall(clientDeviceID) as unknown as IUserPayload;
     const comment = await CommentModel.findOne({ _id: _commentID });
 
-    if(comment.owner.toString() !== userInfo._id){
+    if (comment.owner.toString() !== userInfo._id) {
         return ResponseUtil.postResponse(null, ResponseUtil.defaultResponse(false, PERMISSION_ERROR));
     }
-    const result = await comment.update(
-        { 
-            content, 
+    const result: ICommentPayload = await CommentModel.findOneAndUpdate(
+        { _id: _commentID },
+        {
+            content,
             createdAt: Date.now()
-        }, 
+        },
         { new: true }
-    ).populate('owner', 'profileName email');
-    if(result) return ResponseUtil.commentResponse(result, ResponseUtil.defaultResponse(true, UPDATE_COMMENT_SUCCESS));
-    return ResponseUtil.postResponse(null, ResponseUtil.defaultResponse(false, UPDATE_COMMENT_FAIL));
+    ).populate('owner', 'email profileName');
+    result.toPostId = postID;
+    if (result) return ResponseUtil.commentResponse(result, ResponseUtil.defaultResponse(true, UPDATE_COMMENT_SUCCESS));
+    return ResponseUtil.commentResponse(null, ResponseUtil.defaultResponse(false, UPDATE_COMMENT_FAIL));
 
 }
 
 export const addCommentController = async (commentData: commentData, context: Context): Promise<ICommentResponse> => {
     const { postID, commentContent } = commentData;
     const comment = await createCommentHelper(commentContent, context);
-    const updatedPost = await addCommentToPostHelper(postID, comment);
-    if(updatedPost && comment) return ResponseUtil.commentResponse(comment, ResponseUtil.defaultResponse(true, ADD_COMMENT_SUCCESS));
+    const updatedPost: IPostPayload = await addCommentToPostHelper(postID, comment);
+    comment.toPostId = updatedPost._id;
+    if (updatedPost && comment) return ResponseUtil.commentResponse(comment, ResponseUtil.defaultResponse(true, ADD_COMMENT_SUCCESS));
     throw new Error(ERROR);
 }
 
@@ -78,12 +81,16 @@ export const deleteCommentController = async (commentID: string, postID: string,
     const _commentID = mongo.ObjectId(commentID);
     const _postID = mongo.ObjectId(postID);
     const deleteComment = await CommentModel.findOne({ _id: _commentID });
-    if(deleteComment.owner.toString() !== userInfo._id){
+    const updatePostComment = await PostModel.findOne({ _id: _postID })
+        .populate('owner', 'profileName email')
+        .populate('listOfLike', 'profileName email')
+        .populate({ path: 'listOfComment', select: 'content createdAt', populate: 'owner' });
+    if (deleteComment.owner.toString() !== userInfo._id && updatePostComment.owner._id.toString() !== userInfo._id) {
         return ResponseUtil.postResponse(null, ResponseUtil.defaultResponse(false, PERMISSION_ERROR));
     }
-    await deleteComment.delete();
-    const updatePostComment = await PostModel.findByIdAndUpdate(
-        _postID,
+    const commentResult = await deleteComment.delete();
+    const postResult: IPostPayload = await PostModel.findOneAndUpdate(
+        { _id: _postID },
         {
             $pull: { listOfComment: _commentID },
             $inc: { comments: -1 },
@@ -91,7 +98,7 @@ export const deleteCommentController = async (commentID: string, postID: string,
         { new: true }
     ).populate('owner', 'profileName email')
      .populate('listOfLike', 'profileName email')
-     .populate({ path: 'listOfComment', select: 'content createdAt', populate: 'owner'});
-    if(updatePostComment) return ResponseUtil.postResponse(updatePostComment, ResponseUtil.defaultResponse(true, DELETE_COMMENT_SUCCESS));
+     .populate({ path: 'listOfComment', select: 'content createdAt', populate: 'owner' });
+    if (commentResult && postResult) return ResponseUtil.postResponse(postResult, ResponseUtil.defaultResponse(true, DELETE_COMMENT_SUCCESS));
     return ResponseUtil.postResponse(null, ResponseUtil.defaultResponse(false, DELETE_COMMENT_FAIL));
 }

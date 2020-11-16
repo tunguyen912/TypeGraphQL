@@ -1,5 +1,5 @@
 import { Arg, Ctx, Mutation, PubSub, PubSubEngine, Query, Resolver, Root, Subscription, UseMiddleware } from "type-graphql";
-import { getAllPostController, getPostByIdController, getPostByOwnerIdController, createPostController, deletePostController, updatePostController } from "../../controllers/Post.Controller";
+import { getAllPostController, getPostByIdController, getPostByOwnerIdController, createPostController, deletePostController, updatePostController, getPostNumber } from "../../controllers/Post.Controller";
 
 import { Post } from "../schema";
 // Middlewares
@@ -9,21 +9,26 @@ import { isAuthenticated } from "../../middlewares/isAuthenticatedMiddleware";
 import { Context } from "../../model/types/Context";
 import { IPostPayload } from "../../model/types/IPayload.model";
 import { CREATE_POST_TOPIC, UPDATE_POST_TOPIC } from "../../utils/constants/Post.Constants";
-import { paginationInput, postData, PostResponse, UpdatePostData } from "./Post.Type";
+import { paginationInput, postData, PostResponse, UpdatePostData, GetPostListResponse } from "./Post.Type";
 
 @Resolver()
 export class PostResolver{
     // Query
-    @Query(() => [Post])
+    @Query(() => GetPostListResponse)
     async getAllPost(
-        @Arg('paginationInput', { nullable: true }) paginationInput: paginationInput
-    ): Promise<Post[]> {
-        if(paginationInput){
-            const { limit, cursor } = paginationInput
-            return await getAllPostController(limit, cursor);
+        @Arg('paginationInput') paginationInput: paginationInput
+    ): Promise<GetPostListResponse> {
+        const { limit, cursor } = paginationInput;
+        if(cursor){
+            const data = await getAllPostController(limit, cursor);
+            const totalPost = await getPostNumber();
+            return { data, totalPost }
         }
-        return await getAllPostController();
+            const data = await getAllPostController(limit);
+            const totalPost = await getPostNumber();
+            return { data, totalPost }
     }
+
     @Query(() => Post)
     async getPostById(
         @Arg('postId') postId: string,
@@ -33,13 +38,17 @@ export class PostResolver{
     @Query(() => [Post])
     async getPostByOwnerId(
         @Arg('ownerId') ownerId: string,
-        @Arg('paginationInput', { nullable: true }) paginationInput: paginationInput
-    ): Promise<Post[]>{
-        if(paginationInput){
-            const { limit, cursor } = paginationInput;
-            return await getPostByOwnerIdController(ownerId, limit, cursor);
+        @Arg('paginationInput') paginationInput: paginationInput
+    ): Promise<GetPostListResponse>{
+        const { limit, cursor } = paginationInput;
+        if(cursor){
+            const data = await getPostByOwnerIdController(ownerId, limit, cursor);
+            const totalPost = await getPostNumber(ownerId);
+            return { data, totalPost } 
         }
-        return await getPostByOwnerIdController(ownerId);
+        const data = await getPostByOwnerIdController(ownerId, limit);
+        const totalPost = await getPostNumber(ownerId);
+        return { data, totalPost }     
     }
     // Mutation
     @UseMiddleware(isAuthenticated)
@@ -86,17 +95,8 @@ export class PostResolver{
         const { postID, newPostContent } = updatePostData;
         const { data, response } = await updatePostController(postID, newPostContent, context);
         if(data){
-            const payload: IPostPayload = {
-                _id: data._id,
-                owner: data.owner,
-                content: data.content,
-                likes: data.likes,
-                listOfLike: data.listOfLike,
-                createdAt: data.createdAt,
-                comments: data.comments, 
-                listOfComment: data.listOfComment,
-            }
-            pubSub.publish(UPDATE_POST_TOPIC,  payload);
+            const payload: IPostPayload = data;
+            pubSub.publish(UPDATE_POST_TOPIC, payload);
         }
         return response;
     }
